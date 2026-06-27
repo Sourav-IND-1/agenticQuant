@@ -1,55 +1,17 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const RegimeIndicator = ({ regime = 'Bull' }) => {
-  const getRegimeConfig = (r) => {
-    switch (r?.toLowerCase()) {
-      case 'bull':
-      case 'bullish':
-        return {
-          label: 'Macro Regime: Bull',
-          bg: '#064e3b',
-          border: '#065f46',
-          color: '#6ee7b7',
-          icon: <TrendingUp size={15} color="#6ee7b7" />
-        };
-      case 'bear':
-      case 'bearish':
-        return {
-          label: 'Macro Regime: Bear',
-          bg: '#7f1d1d',
-          border: '#991b1b',
-          color: '#fca5a5',
-          icon: <TrendingDown size={15} color="#fca5a5" />
-        };
-      default:
-        return {
-          label: 'Macro Regime: Neutral',
-          bg: '#78350f',
-          border: '#92400e',
-          color: '#fde68a',
-          icon: <Activity size={15} color="#fde68a" />
-        };
-    }
-  };
-
-  const cfg = getRegimeConfig(regime);
+  const cfg = {
+    bull:    { label: 'Bull Market',  dot: 'dot-green', badge: 'badge-green', Icon: TrendingUp   },
+    bear:    { label: 'Bear Market',  dot: 'dot-red',   badge: 'badge-red',   Icon: TrendingDown },
+    neutral: { label: 'Neutral',      dot: 'dot-amber', badge: 'badge-amber', Icon: Minus        },
+  }[regime?.toLowerCase()] || { label: 'Neutral', dot: 'dot-amber', badge: 'badge-amber', Icon: Minus };
 
   return (
-    <div style={{ 
-      background: cfg.bg, 
-      border: `1px solid ${cfg.border}`, 
-      color: cfg.color,
-      padding: '6px 12px', 
-      borderRadius: '6px', 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '8px',
-      fontSize: '0.8rem',
-      fontWeight: 600
-    }}>
-      {cfg.icon}
-      <span>{cfg.label}</span>
+    <div className={`badge ${cfg.badge}`} style={{ fontSize: '0.72rem', gap: '5px', padding: '4px 10px' }}>
+      <span className={`dot ${cfg.dot}`} />
+      HMM Regime · <strong>{cfg.label}</strong>
     </div>
   );
 };

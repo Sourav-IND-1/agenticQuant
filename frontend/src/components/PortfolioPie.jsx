@@ -1,122 +1,91 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { PieChart as PieIcon, DollarSign } from 'lucide-react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const COLORS = ['#2563eb', '#38bdf8', '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#64748b'];
+/* Tight, desaturated palette — no neon */
+const PALETTE = ['#3b82f6','#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ef4444'];
+
+const fmt = (n) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+const Tooltip_ = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div style={{
+      background: '#18181b', border: '1px solid #27272a',
+      borderRadius: '6px', padding: '8px 12px',
+    }}>
+      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fafafa', marginBottom: '3px' }}>{d.name}</div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#60a5fa' }}>{fmt(d.value)}</div>
+      <div style={{ fontSize: '0.72rem', color: '#71717a', marginTop: '2px' }}>{d.pct}% of capital</div>
+    </div>
+  );
+};
 
 const PortfolioPie = ({ weights = {}, capital = 100000 }) => {
-  const data = Object.entries(weights)
-    .filter(([_, weight]) => weight > 0.001)
-    .map(([key, weight]) => {
-      const exactAmount = Math.round(weight * capital);
-      return {
-        name: key,
-        value: exactAmount,
-        weightPct: (weight * 100).toFixed(1),
-        formattedAmount: exactAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-      };
-    })
+  const raw = Object.entries(weights).filter(([, w]) => w > 0.001)
+    .map(([name, w]) => ({ name, value: Math.round(w * capital), pct: (w * 100).toFixed(1) }))
     .sort((a, b) => b.value - a.value);
 
-  const fallbackData = [
-    { name: 'NVDA', weight: 0.324 },
-    { name: 'MSFT', weight: 0.248 },
-    { name: 'AAPL', weight: 0.182 },
-    { name: 'GOOGL', weight: 0.146 },
-    { name: 'JPM', weight: 0.100 }
-  ].map(item => {
-    const exactAmount = Math.round(item.weight * capital);
-    return {
-      name: item.name,
-      value: exactAmount,
-      weightPct: (item.weight * 100).toFixed(1),
-      formattedAmount: exactAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
-    };
-  });
+  const data = raw.length ? raw : [
+    { name: 'NVDA', value: Math.round(0.324 * capital), pct: '32.4' },
+    { name: 'MSFT', value: Math.round(0.248 * capital), pct: '24.8' },
+    { name: 'AAPL', value: Math.round(0.182 * capital), pct: '18.2' },
+    { name: 'GOOGL',value: Math.round(0.146 * capital), pct: '14.6' },
+    { name: 'JPM',  value: Math.round(0.100 * capital), pct: '10.0' },
+  ];
 
-  const chartData = data.length > 0 ? data : fallbackData;
-  const totalAllocated = chartData.reduce((sum, item) => sum + item.value, 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      return (
-        <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid #2563eb', backgroundColor: '#1f2937' }}>
-          <p style={{ margin: 0, fontWeight: 600, color: '#ffffff', fontSize: '0.9rem' }}>{item.name}</p>
-          <p className="font-mono" style={{ margin: '4px 0 2px 0', color: '#38bdf8', fontSize: '1rem', fontWeight: 600 }}>
-            Allocation: {item.formattedAmount}
-          </p>
-          <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{item.weightPct}% of total budget</span>
-        </div>
-      );
-    }
-    return null;
-  };
+  const total = data.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="glass-panel" style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#111827' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <PieIcon size={18} color="#38bdf8" />
-        <h3 style={{ fontSize: '1rem', margin: 0, color: '#f9fafb', fontWeight: 600 }}>Optimal Asset Deployment</h3>
-        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '4px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, border: '1px solid #334155' }}>
-          <DollarSign size={12} /> Total: {totalAllocated}
-        </span>
+    <div className="card" style={{ padding: '16px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div className="section-label">
+        <h3>Optimal Allocation</h3>
+        <span className="badge badge-blue" style={{ marginLeft: 'auto' }}>PyPortfolioOpt</span>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', minHeight: '260px' }}>
-        {/* Donut Chart */}
-        <div style={{ flex: '1 1 200px', height: '240px', position: 'relative' }}>
-          <ResponsiveContainer width="100%" height="100%">
+      {/* Total */}
+      <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 600, color: '#fafafa' }}>{fmt(total)}</span>
+        <span style={{ fontSize: '0.72rem', color: 'var(--t-2)' }}>total deployed across {data.length} assets</span>
+      </div>
+
+      <div style={{ display: 'flex', gap: '16px', flex: 1, minHeight: 0 }}>
+        {/* Donut */}
+        <div style={{ width: '160px', flexShrink: 0, position: 'relative' }}>
+          <ResponsiveContainer width="100%" height={160}>
             <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={3}
-                dataKey="value"
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#111827" strokeWidth={2} />
-                ))}
+              <Pie data={data} cx="50%" cy="50%" innerRadius={48} outerRadius={72}
+                paddingAngle={2} dataKey="value" strokeWidth={0}>
+                {data.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<Tooltip_ />} />
             </PieChart>
           </ResponsiveContainer>
-          
           {/* Center label */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
-            <div style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase' }}>Assets</div>
-            <div className="font-mono" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#ffffff' }}>{chartData.length}</div>
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center', pointerEvents: 'none',
+          }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', fontWeight: 600, color: '#fafafa' }}>{data.length}</div>
+            <div style={{ fontSize: '0.62rem', color: 'var(--t-2)', textTransform: 'uppercase' }}>assets</div>
           </div>
         </div>
 
-        {/* Exact Dollar Breakdown List */}
-        <div style={{ flex: '1 1 180px', display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
-          <div style={{ fontSize: '0.75rem', color: '#9ca3af', fontWeight: 500, marginBottom: '2px', textTransform: 'uppercase' }}>
-            Exact Amount per Asset
-          </div>
-          {chartData.map((item, index) => (
-            <div 
-              key={index} 
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between', 
-                padding: '8px 12px', 
-                background: '#1f2937', 
-                borderRadius: '6px', 
-                borderLeft: `3px solid ${COLORS[index % COLORS.length]}`,
-                borderTop: '1px solid #374151',
-                borderRight: '1px solid #374151',
-                borderBottom: '1px solid #374151'
-              }}
-            >
-              <span style={{ fontWeight: 600, color: '#f9fafb', fontSize: '0.85rem' }}>{item.name}</span>
-              <span className="font-mono" style={{ fontWeight: 600, color: '#38bdf8', fontSize: '0.88rem' }}>
-                {item.formattedAmount}
-              </span>
+        {/* Allocation table */}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {data.map((d, i) => (
+            <div key={i} className="alloc-row">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: PALETTE[i % PALETTE.length], flexShrink: 0 }} />
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--t-0)' }}>{d.name}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--t-2)', minWidth: '38px', textAlign: 'right' }}>{d.pct}%</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: '#fafafa', minWidth: '70px', textAlign: 'right' }}>{fmt(d.value)}</span>
+              </div>
             </div>
           ))}
         </div>

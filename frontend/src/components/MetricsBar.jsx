@@ -1,87 +1,63 @@
 import React from 'react';
-import { TrendingUp, AlertTriangle, Activity, DollarSign, Award } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Activity, Wallet, Award } from 'lucide-react';
 
 const MetricsBar = ({ metrics = {} }) => {
-  const defaultMetrics = {
+  const m = {
     expectedReturn: metrics.expectedReturn ?? 0.148,
-    sharpeRatio: metrics.sharpeRatio ?? 2.14,
-    var95: metrics.var95 ?? -0.032,
-    maxDrawdown: metrics.maxDrawdown ?? -0.085,
-    capital: metrics.capital ?? 100000
+    sharpeRatio:    metrics.sharpeRatio    ?? 2.14,
+    var95:          metrics.var95          ?? -0.032,
+    maxDrawdown:    metrics.maxDrawdown    ?? -0.085,
+    capital:        metrics.capital        ?? 100000,
   };
 
   const cards = [
     {
-      title: 'Expected Annual Return',
-      value: `+${(defaultMetrics.expectedReturn * 100).toFixed(1)}%`,
-      sub: 'Post-Optimization Posterior',
-      icon: <TrendingUp size={18} color="#34d399" />,
-      borderTop: '#059669',
-      valueColor: '#34d399'
+      label: 'Expected Return',
+      value: `+${(m.expectedReturn * 100).toFixed(2)}%`,
+      sub: 'Annualized BL posterior',
+      icon: <TrendingUp size={14} color="var(--green)" />,
+      accentColor: 'var(--green)',
     },
     {
-      title: 'Sharpe Ratio',
-      value: defaultMetrics.sharpeRatio.toFixed(2),
-      sub: 'Annualized (Rf = 4.0%)',
-      icon: <Award size={18} color="#38bdf8" />,
-      borderTop: '#0284c7',
-      valueColor: '#f9fafb'
+      label: 'Sharpe Ratio',
+      value: m.sharpeRatio.toFixed(2),
+      sub: 'Risk-adj. α / σ (Rf=4%)',
+      icon: <Award size={14} color="#60a5fa" />,
+      accentColor: '#60a5fa',
     },
     {
-      title: 'Daily Value at Risk (95%)',
-      value: `${(defaultMetrics.var95 * 100).toFixed(2)}%`,
-      sub: 'Historical Cornisher-Fisher',
-      icon: <AlertTriangle size={18} color="#f87171" />,
-      borderTop: '#dc2626',
-      valueColor: '#f87171'
+      label: 'CVaR 95%',
+      value: `${(m.var95 * 100).toFixed(2)}%`,
+      sub: 'Expected tail loss',
+      icon: <AlertTriangle size={14} color="var(--red)" />,
+      accentColor: 'var(--red)',
     },
     {
-      title: 'Est. Max Drawdown',
-      value: `${(defaultMetrics.maxDrawdown * 100).toFixed(1)}%`,
-      sub: 'Peak-to-Trough Stress Test',
-      icon: <Activity size={18} color="#fbbf24" />,
-      borderTop: '#d97706',
-      valueColor: '#fbbf24'
+      label: 'Max Drawdown',
+      value: `${(m.maxDrawdown * 100).toFixed(2)}%`,
+      sub: 'Peak-to-trough historical',
+      icon: <Activity size={14} color="var(--amber)" />,
+      accentColor: 'var(--amber)',
     },
     {
-      title: 'Deployed Capital',
-      value: defaultMetrics.capital.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
-      sub: 'Total Active Allocation',
-      icon: <DollarSign size={18} color="#60a5fa" />,
-      borderTop: '#2563eb',
-      valueColor: '#f9fafb'
-    }
+      label: 'Deployed Capital',
+      value: m.capital.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
+      sub: 'Total position size',
+      icon: <Wallet size={14} color="#a78bfa" />,
+      accentColor: '#a78bfa',
+    },
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          className="glass-panel"
-          style={{
-            padding: '16px 18px',
-            borderTop: `3px solid ${card.borderTop}`,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            backgroundColor: '#111827'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: 500 }}>{card.title}</span>
-            <div style={{ background: '#1f2937', padding: '6px', borderRadius: '6px' }}>
-              {card.icon}
-            </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '20px' }}>
+      {cards.map((c, i) => (
+        <div key={i} className="kpi-card" style={{ borderTop: `2px solid ${c.accentColor}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span className="kpi-label">{c.label}</span>
+            {c.icon}
           </div>
-          <div>
-            <div className="font-mono" style={{ fontSize: '1.5rem', fontWeight: 600, color: card.valueColor }}>
-              {card.value}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-              {card.sub}
-            </div>
-          </div>
+          <div className="kpi-value mono">{c.value}</div>
+          <div className="kpi-sub">{c.sub}</div>
         </div>
       ))}
     </div>
