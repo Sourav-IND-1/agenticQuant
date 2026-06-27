@@ -1,305 +1,133 @@
-/* ─────────────────────────────────────────────────────────────────────────────
-   QUANT PORTFOLIO PLATFORM — Design System
-   Inspired by: Bloomberg Terminal, Linear.app, Vercel Dashboard, Clerk.com
-   Philosophy: Dense, legible, information-first. Every px earns its place.
-   No glows. No gradients. No neon. No glassmorphism. No AI aesthetics.
-───────────────────────────────────────────────────────────────────────────── */
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-/* ── Tokens ────────────────────────────────────────────────────────────────── */
+/* Institutional Quant Dashboard UI Design System */
 :root {
-  /* Backgrounds */
-  --bg-0:    #09090b;   /* page bg — near-black zinc */
-  --bg-1:    #0e0e10;   /* card level 1 */
-  --bg-2:    #18181b;   /* card level 2 / input */
-  --bg-3:    #27272a;   /* hover / selected */
-
-  /* Borders */
-  --line-0:  #1c1c1e;   /* hairline dividers */
-  --line-1:  #27272a;   /* card borders */
-  --line-2:  #3f3f46;   /* active / focus */
-
-  /* Text */
-  --t-0:     #fafafa;   /* headings */
-  --t-1:     #a1a1aa;   /* body */
-  --t-2:     #71717a;   /* muted / labels */
-  --t-3:     #3f3f46;   /* disabled / placeholder */
-
-  /* Semantic — tight, desaturated, professional */
-  --green:   #22c55e;
-  --green-bg:#052e16;
-  --green-bd:#14532d;
-  --red:     #ef4444;
-  --red-bg:  #2d0a0a;
-  --red-bd:  #7f1d1d;
-  --amber:   #eab308;
-  --amber-bg:#1c1a05;
-  --amber-bd:#713f12;
-  --blue:    #3b82f6;
-  --blue-dim:#1e3a5f;
-
-  /* Accent — one single accent color, used sparingly */
-  --accent:  #3b82f6;
-
-  /* Typography */
-  --font-ui:   'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
-
-  /* Spacing scale (4px base) */
-  --sp-1: 4px;
-  --sp-2: 8px;
-  --sp-3: 12px;
-  --sp-4: 16px;
-  --sp-5: 20px;
-  --sp-6: 24px;
-
-  /* Radii */
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
+  --bg-main: #0b0f19;
+  --bg-card: #111827;
+  --bg-input: #1f2937;
+  --border-color: #1f2937;
+  --border-hover: #374151;
+  
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  
+  --accent-blue: #2563eb;
+  --accent-cyan: #38bdf8;
+  --accent-purple: #6366f1;
+  
+  --bull-green: #10b981;
+  --bear-red: #ef4444;
+  --neutral-amber: #f59e0b;
+  
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* ── Reset ────────────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { font-size: 14px; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
-  font-family: var(--font-ui);
-  background: var(--bg-0);
-  color: var(--t-1);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   min-height: 100vh;
+  overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
-/* ── Typography ───────────────────────────────────────────────────────────── */
-h1, h2, h3, h4 { font-family: var(--font-ui); color: var(--t-0); font-weight: 600; letter-spacing: -0.01em; }
-h1 { font-size: 1.25rem; }
-h2 { font-size: 1.1rem; }
-h3 { font-size: 1rem; }
-h4 { font-size: 0.875rem; }
-
-.mono { font-family: var(--font-mono); }
-
-/* ── Layout ───────────────────────────────────────────────────────────────── */
-.app-root {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: var(--sp-4) var(--sp-6);
-}
-
-/* ── Scrollbar ────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 3px; }
-
-/* ── Card ────────────────────────────────────────────────────────────────── */
-.card {
-  background: var(--bg-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-lg);
-}
-
-.card-inner {
-  background: var(--bg-2);
-  border: 1px solid var(--line-0);
-  border-radius: var(--r-md);
-}
-
-/* ── Section header ──────────────────────────────────────────────────────── */
-.section-label {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding-bottom: var(--sp-3);
-  border-bottom: 1px solid var(--line-0);
-  margin-bottom: var(--sp-4);
-}
-.section-label h3 { font-size: 0.875rem; font-weight: 600; color: var(--t-0); }
-.section-label .badge { margin-left: auto; }
-
-/* ── Badge ───────────────────────────────────────────────────────────────── */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 2px 7px;
-  border-radius: var(--r-sm);
-  font-family: var(--font-ui);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-.badge-green  { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
-.badge-red    { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bd);   }
-.badge-amber  { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
-.badge-blue   { background: #1e3a5f;         color: #93c5fd;      border: 1px solid #1e40af;         }
-.badge-zinc   { background: var(--bg-3);     color: var(--t-1);   border: 1px solid var(--line-2);   }
-
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: 0 var(--sp-4);
-  height: 34px;
-  font-family: var(--font-ui);
-  font-size: 0.8rem;
-  font-weight: 500;
-  border-radius: var(--r-md);
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-  white-space: nowrap;
-}
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.btn-primary {
-  background: var(--accent);
-  color: #fff;
-  border-color: #2563eb;
-}
-.btn-primary:not(:disabled):hover { background: #2563eb; }
-
-.btn-ghost {
-  background: transparent;
-  color: var(--t-1);
-  border-color: var(--line-1);
-}
-.btn-ghost:not(:disabled):hover { background: var(--bg-2); border-color: var(--line-2); color: var(--t-0); }
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  justify-content: center;
-  background: transparent;
-  color: var(--t-2);
-  border-color: transparent;
-  border-radius: var(--r-md);
-}
-.btn-icon:hover { background: var(--bg-2); color: var(--t-0); border-color: var(--line-1); }
-
-/* ── Input ───────────────────────────────────────────────────────────────── */
-.input {
-  width: 100%;
-  height: 38px;
-  padding: 0 var(--sp-3);
-  background: var(--bg-2);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-md);
-  color: var(--t-0);
-  font-family: var(--font-ui);
-  font-size: 0.875rem;
-  transition: border-color 0.12s;
-  outline: none;
-}
-.input::placeholder { color: var(--t-3); }
-.input:focus { border-color: var(--accent); }
-
-textarea.input { height: auto; padding: var(--sp-3); resize: none; }
-
-/* ── Divider ─────────────────────────────────────────────────────────────── */
-.divider { border: none; border-top: 1px solid var(--line-0); margin: 0; }
-
-/* ── Pill row ────────────────────────────────────────────────────────────── */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--line-1);
-  background: var(--bg-2);
-  color: var(--t-1);
-  font-size: 0.775rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.1s, border-color 0.1s, color 0.1s;
-}
-.pill:hover { background: var(--bg-3); border-color: var(--line-2); color: var(--t-0); }
-
-/* ── Status dot ──────────────────────────────────────────────────────────── */
-.dot {
-  display: inline-block;
+/* Scrollbar styling */
+::-webkit-scrollbar {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
 }
-.dot-green { background: var(--green); }
-.dot-red   { background: var(--red); }
-.dot-amber { background: var(--amber); }
-
-/* ── Ticker chip ─────────────────────────────────────────────────────────── */
-.ticker-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line-1);
-  background: var(--bg-2);
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }
 
-/* ── KPI card ────────────────────────────────────────────────────────────── */
-.kpi-card {
-  background: var(--bg-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-lg);
-  padding: var(--sp-4) var(--sp-5);
-}
-.kpi-card .kpi-label { font-size: 0.72rem; color: var(--t-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-.kpi-card .kpi-value { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; color: var(--t-0); line-height: 1; }
-.kpi-card .kpi-sub   { font-size: 0.72rem; color: var(--t-2); margin-top: 5px; }
-
-/* ── Table-style row for allocations ─────────────────────────────────────── */
-.alloc-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  border-radius: var(--r-sm);
-  transition: background 0.1s;
-}
-.alloc-row:hover { background: var(--bg-2); }
-
-/* ── Slide-over drawer ───────────────────────────────────────────────────── */
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 200;
-}
-.drawer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 440px;
-  background: var(--bg-1);
-  border-left: 1px solid var(--line-1);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Chart overrides ─────────────────────────────────────────────────────── */
-.recharts-tooltip-wrapper { outline: none; }
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line { stroke: var(--line-0) !important; }
-
-/* glass-panel — kept as alias pointing to .card for backward compat */
+/* Clean Institutional Card Panels */
 .glass-panel {
-  background: var(--bg-1);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
 }
 
-/* app-container legacy alias */
-.app-container { max-width: 1440px; margin: 0 auto; padding: var(--sp-4) var(--sp-6); }
+.glass-panel:hover {
+  border-color: var(--border-hover);
+}
+
+.glass-input {
+  background: var(--bg-input);
+  border: 1px solid #374151;
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+/* Typography Helpers */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Institutional Status Badges */
+.badge-bull {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-bear {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+/* Layout Utilities */
+.app-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+}

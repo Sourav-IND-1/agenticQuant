@@ -187,30 +187,6 @@ def analyze_strategy(req: AnalyzeRequest):
         raise HTTPException(status_code=500, detail=f"Quantitative calculation failed: {str(e)}")
 
 
-@app.get("/api/prices")
-@app.get("/prices")
-def get_prices():
-    """Returns the latest closing price and daily percentage change for all universe tickers."""
-    try:
-        market_data = get_live_market_data()
-        result = {}
-        for ticker in list(config.TICKERS) + ["SPY"]:
-            df = market_data.get(ticker)
-            if df is None or df.empty or len(df) < 2:
-                continue
-            latest_close  = float(df["Close"].iloc[-1])
-            prev_close    = float(df["Close"].iloc[-2])
-            pct_change    = ((latest_close - prev_close) / prev_close) * 100 if prev_close != 0 else 0.0
-            result[ticker] = {
-                "price":  round(latest_close, 2),
-                "change": round(pct_change,   2),
-                "up":     pct_change >= 0,
-            }
-        return _sanitize_for_json({"status": "success", "prices": result})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Price fetch failed: {str(e)}")
-
-
 @app.get("/api/history")
 @app.get("/history")
 def get_history(limit: int = 5):

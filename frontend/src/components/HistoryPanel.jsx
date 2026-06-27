@@ -1,90 +1,100 @@
 import React from 'react';
-import { X, Clock, ArrowRight, Database } from 'lucide-react';
-
-const DUMMY = [
-  { id: '1', timestamp: '2026-06-27 14:30', prompt: 'Aggressive $100k tech growth portfolio focusing on NVDA and MSFT', regime: 'Bull',    expectedReturn: 0.165, sharpeRatio: 2.34 },
-  { id: '2', timestamp: '2026-06-27 12:15', prompt: 'Conservative $250k capital preservation for 3 months',             regime: 'Neutral', expectedReturn: 0.072, sharpeRatio: 1.85 },
-  { id: '3', timestamp: '2026-06-26 16:45', prompt: 'Balanced $50k portfolio expecting AAPL bounce',                    regime: 'Bull',    expectedReturn: 0.118, sharpeRatio: 1.95 },
-];
-
-const regimeBadge = (r) => {
-  if (r === 'Bull')    return 'badge badge-green';
-  if (r === 'Bear')    return 'badge badge-red';
-  return 'badge badge-amber';
-};
+import { X, Clock, ArrowRight, ShieldCheck, Database } from 'lucide-react';
 
 const HistoryPanel = ({ isOpen, onClose, history = [], onSelectHistory }) => {
   if (!isOpen) return null;
-  const list = history.length ? history : DUMMY;
+
+  const dummyHistory = [
+    {
+      id: '1',
+      timestamp: '2026-06-27 14:30',
+      prompt: 'Aggressive $100k tech growth portfolio focusing on NVDA and MSFT',
+      regime: 'Bull',
+      expectedReturn: 0.165,
+      sharpeRatio: 2.34
+    },
+    {
+      id: '2',
+      timestamp: '2026-06-27 12:15',
+      prompt: 'Conservative $250k capital preservation for 3 months',
+      regime: 'Neutral',
+      expectedReturn: 0.072,
+      sharpeRatio: 1.85
+    },
+    {
+      id: '3',
+      timestamp: '2026-06-26 16:45',
+      prompt: 'Balanced $50k portfolio expecting AAPL bounce',
+      regime: 'Bull',
+      expectedReturn: 0.118,
+      sharpeRatio: 1.95
+    }
+  ];
+
+  const displayList = history.length > 0 ? history : dummyHistory;
 
   return (
-    <div className="drawer-overlay" onClick={onClose}>
-      <div className="drawer" onClick={e => e.stopPropagation()}>
-
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', height: '100%', borderRadius: '16px 0 0 16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderLeft: '1px solid var(--accent-blue)' }}>
         {/* Header */}
-        <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line-0)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Database size={14} color="var(--t-2)" />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--t-0)' }}>Execution History</span>
-            <span className="badge badge-zinc">{list.length} runs</span>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Database size={20} color="var(--accent-cyan)" />
+            <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Strategy Archives</h3>
           </div>
-          <button className="btn-icon btn" onClick={onClose}>
-            <X size={15} />
+          <button
+            onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-secondary)', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+          >
+            <X size={18} />
           </button>
         </div>
 
-        {/* Subtext */}
-        <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--line-0)' }}>
-          <p style={{ fontSize: '0.75rem', color: 'var(--t-2)', lineHeight: '1.4' }}>
-            Select a past run to restore portfolio weights, BL views, and backtest results.
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+            Click any past quantitative run to restore weights, Black-Litterman views, and walk-forward simulations.
           </p>
-        </div>
 
-        {/* List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {list.map((item, idx) => (
+          {displayList.map((item, idx) => (
             <div
-              key={item.id ?? idx}
-              onClick={() => { onSelectHistory?.(item); onClose(); }}
-              style={{
-                background: 'var(--bg-2)',
-                border: '1px solid var(--line-1)',
-                borderRadius: '6px',
-                padding: '12px 14px',
-                cursor: 'pointer',
-                transition: 'border-color 0.12s, background 0.12s',
+              key={item.id || idx}
+              onClick={() => {
+                if (onSelectHistory) onSelectHistory(item);
+                onClose();
               }}
-              onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--line-2)'; e.currentTarget.style.background = '#202024'; }}
-              onMouseOut={e  => { e.currentTarget.style.borderColor = 'var(--line-1)'; e.currentTarget.style.background = 'var(--bg-2)'; }}
+              className="glass-panel"
+              style={{ padding: '16px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.06)', transition: 'all 0.2s' }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--accent-blue)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; }}
             >
-              {/* Top row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: 'var(--t-2)', fontFamily: 'var(--font-mono)' }}>
-                  <Clock size={11} /> {item.timestamp}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                  <Clock size={12} /> {item.timestamp}
                 </span>
-                <span className={regimeBadge(item.regime)}>{item.regime}</span>
+                <span className={item.regime === 'Bull' ? 'badge-bull' : item.regime === 'Bear' ? 'badge-bear' : 'badge-neutral'} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                  {item.regime?.toUpperCase()}
+                </span>
               </div>
 
-              {/* Prompt */}
-              <p style={{ fontSize: '0.8rem', color: 'var(--t-0)', margin: '0 0 10px 0', lineHeight: '1.45' }}>
-                {item.prompt}
+              <p style={{ fontSize: '0.9rem', color: '#ffffff', margin: '0 0 12px 0', lineHeight: '1.4' }}>
+                "{item.prompt}"
               </p>
 
-              {/* Metrics */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid var(--line-0)', paddingTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--t-2)', textTransform: 'uppercase' }}>Return </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--green)' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Return: </span>
+                  <span className="font-mono" style={{ fontSize: '0.85rem', color: 'var(--bull-green)', fontWeight: 700 }}>
                     +{(item.expectedReturn * 100).toFixed(1)}%
                   </span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.68rem', color: 'var(--t-2)', textTransform: 'uppercase' }}>Sharpe </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--t-0)' }}>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Sharpe: </span>
+                  <span className="font-mono" style={{ fontSize: '0.85rem', color: '#ffffff', fontWeight: 700 }}>
                     {item.sharpeRatio.toFixed(2)}
                   </span>
                 </div>
-                <ArrowRight size={13} color="var(--t-2)" style={{ marginLeft: 'auto' }} />
+                <ArrowRight size={14} color="var(--accent-blue)" style={{ marginLeft: 'auto' }} />
               </div>
             </div>
           ))}

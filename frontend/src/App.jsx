@@ -96,7 +96,7 @@ function App() {
   };
 
   return (
-    <div className="app-container" style={{ paddingBottom: '48px' }}>
+    <div className="app-container">
       <Navbar 
         regime={regime} 
         onOpenHistory={() => setIsHistoryOpen(true)} 

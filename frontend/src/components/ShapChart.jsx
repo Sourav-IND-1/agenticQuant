@@ -1,74 +1,63 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-
-const FALLBACK = [
-  { feature: 'MA50',         importance: 0.38 },
-  { feature: 'MACD_signal',  importance: 0.33 },
-  { feature: 'RSI',          importance: 0.11 },
-  { feature: 'BB_lower',     importance: 0.07 },
-  { feature: 'ADX',          importance: 0.05 },
-  { feature: 'Volume_chg',   importance: 0.04 },
-];
-
-/* Single blue palette, varying opacity — professional, readable */
-const barColor = (i) => {
-  const opacities = [1, 0.85, 0.65, 0.5, 0.4, 0.3];
-  return `rgba(59,130,246,${opacities[i] ?? 0.25})`;
-};
-
-const Tooltip_ = ({ active, payload }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '6px', padding: '8px 12px' }}>
-      <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#fafafa', marginBottom: '2px' }}>{payload[0].payload.feature}</div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.88rem', color: '#60a5fa' }}>
-        {payload[0].value.toFixed(1)}% attribution
-      </div>
-    </div>
-  );
-};
+import { BarChart3 } from 'lucide-react';
 
 const ShapChart = ({ featureImportances = [] }) => {
-  const raw = featureImportances.length ? featureImportances : FALLBACK;
-  const data = raw.slice(0, 6).map(d => ({
-    feature: d.feature,
-    value: +(d.importance * 100).toFixed(1),
+  const fallbackData = [
+    { feature: 'MACD_signal', importance: 0.225 },
+    { feature: 'MA20', importance: 0.161 },
+    { feature: 'ADX', importance: 0.116 },
+    { feature: 'Volume_change', importance: 0.103 },
+    { feature: 'MA50', importance: 0.094 },
+    { feature: 'RSI', importance: 0.082 }
+  ];
+
+  const rawData = featureImportances.length > 0 ? featureImportances : fallbackData;
+  const chartData = rawData.slice(0, 6).map(item => ({
+    name: item.feature,
+    value: Math.round(item.importance * 1000) / 10
   }));
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid #3b82f6', backgroundColor: '#1f2937' }}>
+          <p style={{ margin: 0, fontWeight: 600, color: '#ffffff', fontSize: '0.9rem' }}>{payload[0].payload.name}</p>
+          <p className="font-mono" style={{ margin: '4px 0 0 0', color: '#60a5fa', fontSize: '0.95rem' }}>
+            Attribution Weight: {payload[0].value}%
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="card" style={{ padding: '16px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="section-label">
-        <h3>Feature Attribution</h3>
-        <span className="badge badge-zinc" style={{ marginLeft: 'auto' }}>SHAP · XGBoost</span>
+    <div className="glass-panel" style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#111827' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+        <BarChart3 size={18} color="#38bdf8" />
+        <h3 style={{ fontSize: '1rem', margin: 0, color: '#f9fafb', fontWeight: 600 }}>Model Feature Attribution (XGBoost SHAP)</h3>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '2px 8px', borderRadius: '4px', border: '1px solid #334155' }}>
+          Tree Shapley
+        </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: '220px' }}>
+      <div style={{ flex: 1, minHeight: '260px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
-          >
-            <XAxis
-              type="number" unit="%" dataKey="value"
-              tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-              axisLine={{ stroke: '#1c1c1e' }} tickLine={false}
-            />
-            <YAxis
-              dataKey="feature" type="category" width={88}
-              tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-              axisLine={false} tickLine={false}
-            />
-            <Tooltip content={<Tooltip_ />} cursor={{ fill: 'rgba(255,255,255,0.025)' }} />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={14}>
-              {data.map((_, i) => <Cell key={i} fill={barColor(i)} />)}
+          <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+            <XAxis type="number" unit="%" stroke="#4b5563" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+            <YAxis dataKey="name" type="category" stroke="#4b5563" tick={{ fill: '#e5e7eb', fontSize: 12 }} width={100} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+              {chartData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={index === 0 ? '#2563eb' : index === 1 ? '#3b82f6' : index === 2 ? '#60a5fa' : '#93c5fd'} 
+                />
+              ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      <div style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--t-2)', borderTop: '1px solid var(--line-0)', paddingTop: '8px' }}>
-        Shapley values — average marginal contribution to model prediction across held-out test data.
       </div>
     </div>
   );

@@ -1,56 +1,71 @@
 import React from 'react';
-import { BarChart2, Clock, History } from 'lucide-react';
+import { Activity, BarChart2 } from 'lucide-react';
 import RegimeIndicator from './RegimeIndicator';
 
 const Navbar = ({ regime = 'Bull', onOpenHistory }) => {
-  const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-
   return (
-    <header style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      height: '52px',
-      padding: '0 24px',
-      marginBottom: '20px',
-      background: '#0e0e10',
-      border: '1px solid #1c1c1e',
-      borderRadius: '8px'
-    }}>
-
-      {/* Left — Brand */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <BarChart2 size={16} color="#3b82f6" strokeWidth={2} />
-        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#fafafa', letterSpacing: '-0.01em' }}>
-          Portfolio Intelligence
-        </span>
-        <span style={{ width: '1px', height: '14px', background: '#27272a' }} />
-        <span style={{ fontSize: '0.75rem', color: '#71717a', fontWeight: 400 }}>
-          Black-Litterman · XGBoost · HMM Regime
-        </span>
+    <header className="glass-panel" style={{ padding: '16px 24px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#111827' }}>
+      {/* Brand & Logo - Left Side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ 
+          background: '#1e293b',
+          border: '1px solid #334155',
+          padding: '10px',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <BarChart2 size={20} color="#38bdf8" />
+        </div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f9fafb', margin: 0 }}>
+              Quantitative Portfolio Analytics
+            </h1>
+            <span style={{ fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '2px 8px', borderRadius: '4px', fontWeight: 500, border: '1px solid #334155' }}>
+              Institutional v2.4
+            </span>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>
+            Black-Litterman Optimization & Multi-Regime XGBoost Signals
+          </p>
+        </div>
       </div>
 
-      {/* Center — Regime */}
-      <RegimeIndicator regime={regime} />
+      {/* Center Macro Regime Badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <RegimeIndicator regime={regime} />
+      </div>
 
-      {/* Right — Status + Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {/* Live dot */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', background: '#052e16', border: '1px solid #14532d', borderRadius: '4px' }}>
-          <span className="dot dot-green" />
-          <span style={{ fontSize: '0.72rem', color: '#86efac', fontWeight: 500, fontFamily: 'var(--font-mono)' }}>
-            NYSE {now}
-          </span>
+      {/* Live NYSE Status Indicator & Archives - Right Side */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#132a24', borderRadius: '4px', border: '1px solid #1f4e3d' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
+          <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 500 }}>NYSE Live Feed Connected</span>
         </div>
 
-        {/* History */}
-        <button
-          className="btn btn-ghost"
+        <button 
           onClick={onOpenHistory}
-          style={{ height: '30px', fontSize: '0.775rem', gap: '5px' }}
+          style={{
+            background: '#1f2937',
+            border: '1px solid #374151',
+            color: '#f9fafb',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'background 0.15s'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#374151'; }}
+          onMouseOut={(e) => { e.currentTarget.style.background = '#1f2937'; }}
         >
-          <History size={13} />
-          Runs
+          <Activity size={16} color="#38bdf8" />
+          Execution Logs
         </button>
       </div>
     </header>
