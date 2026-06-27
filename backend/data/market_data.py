@@ -81,8 +81,9 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
     for ticker in config.TICKERS:
         df = cache.get(ticker, pd.DataFrame())
         
-        # Fetch delta if yfinance is available
-        if yf is not None and not df.empty:
+        # Fetch delta only if explicitly enabled via environment variable to avoid SSL cert hangs
+        import os
+        if yf is not None and not df.empty and os.getenv("FETCH_LIVE_YFINANCE") == "true":
             last_date = df.index[-1].strftime('%Y-%m-%d')
             if last_date < today_str:
                 try:
