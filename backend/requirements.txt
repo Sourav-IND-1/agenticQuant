@@ -1,7 +1,7 @@
 yfinance
 pandas
 numpy
-pypfopt
+pyportfolioopt
 xgboost
 scikit-learn
 shap

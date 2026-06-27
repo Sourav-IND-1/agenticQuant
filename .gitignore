@@ -1,0 +1,22 @@
+# Python & Environment
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+*.env
+
+# Frontend & Node
+node_modules/
+dist/
+build/
+
+# System & Logs
+.DS_Store
+*.log
+
+# Large Data
+*.csv
+*.db
+backend/cache/
