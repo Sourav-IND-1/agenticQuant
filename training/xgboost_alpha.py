@@ -4,7 +4,6 @@ import pickle
 import pandas as pd
 import numpy as np
 from collections import Counter
-import pandas_ta as ta
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sklearn.feature_selection import mutual_info_classif
@@ -22,22 +21,58 @@ def fetch_data():
     data = {}
     for ticker in TICKERS:
         df = yf.download(ticker, start="2008-01-01", end="2024-12-31")
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.droplevel(1)
         data[ticker] = df
     return data
 
 def add_indicators(df):
-    df['RSI'] = ta.rsi(df['Close'], length=14)
-    macd = ta.macd(df['Close'])
-    df['MACD'] = macd['MACD_12_26_9']
-    df['MACD_signal'] = macd['MACDs_12_26_9']
-    bb = ta.bbands(df['Close'])
-    df['BB_upper'] = bb['BBU_5_2.0']
-    df['BB_lower'] = bb['BBL_5_2.0']
-    df['ADX'] = ta.adx(df['High'], df['Low'], df['Close'])['ADX_14']
-    df['MA5'] = ta.sma(df['Close'], length=5)
-    df['MA20'] = ta.sma(df['Close'], length=20)
-    df['MA50'] = ta.sma(df['Close'], length=50)
+    # RSI (14)
+    delta = df['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    df['RSI'] = 100 - (100 / (1 + rs))
+
+    # MACD (12, 26, 9)
+    ema12 = df['Close'].ewm(span=12, adjust=False).mean()
+    ema26 = df['Close'].ewm(span=26, adjust=False).mean()
+    df['MACD'] = ema12 - ema26
+    df['MACD_signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+
+    # Bollinger Bands (5, 2.0)
+    sma5 = df['Close'].rolling(window=5).mean()
+    std5 = df['Close'].rolling(window=5).std()
+    df['BB_upper'] = sma5 + (2.0 * std5)
+    df['BB_lower'] = sma5 - (2.0 * std5)
+
+    # ADX (14)
+    high_diff = df['High'].diff()
+    low_diff = df['Low'].diff()
+    pos_dm = np.where((high_diff > 0) & (high_diff > -low_diff), high_diff, 0.0)
+    neg_dm = np.where((low_diff < 0) & (-low_diff > high_diff), -low_diff, 0.0)
+    
+    tr = pd.concat([
+        df['High'] - df['Low'],
+        (df['High'] - df['Close'].shift()).abs(),
+        (df['Low'] - df['Close'].shift()).abs()
+    ], axis=1).max(axis=1)
+    
+    atr14 = tr.rolling(window=14).mean()
+    pos_dm_series = pd.Series(pos_dm.flatten(), index=df.index).rolling(window=14).mean()
+    neg_dm_series = pd.Series(neg_dm.flatten(), index=df.index).rolling(window=14).mean()
+    
+    plus_di14 = 100 * (pos_dm_series / atr14)
+    minus_di14 = 100 * (neg_dm_series / atr14)
+    dx = 100 * ((plus_di14 - minus_di14).abs() / (plus_di14 + minus_di14))
+    df['ADX'] = dx.rolling(window=14).mean()
+
+    # MAs and Volume
+    df['MA5'] = df['Close'].rolling(window=5).mean()
+    df['MA20'] = df['Close'].rolling(window=20).mean()
+    df['MA50'] = df['Close'].rolling(window=50).mean()
     df['Volume_change'] = df['Volume'].pct_change()
+    
     return df.dropna()
 
 def triple_barrier_labels(df, upper_mult=2, lower_mult=1, horizon=10):
@@ -166,7 +201,12 @@ def main():
 
     for ticker in TICKERS:
         print(f"Training XGBoost for {ticker}...")
-        df = add_indicators(data[ticker].copy())
+        df_raw = data.get(ticker)
+        if df_raw is None or df_raw.empty or len(df_raw) < 100:
+            print(f"Skipping {ticker} due to insufficient data.")
+            continue
+            
+        df = add_indicators(df_raw.copy())
         df = triple_barrier_labels(df)
         
         le = LabelEncoder()

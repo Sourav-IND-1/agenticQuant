@@ -1,0 +1,11 @@
+# Environment
+.env
+venv/
+env/
+__pycache__/
+
+# Large Models & Data
+backend/models/*.pkl
+backend/cache/*.pkl
+*.csv
+*.db
