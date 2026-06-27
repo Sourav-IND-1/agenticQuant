@@ -2,10 +2,18 @@ import React, { useState } from 'react';
 import { Send, Sparkles, Terminal, RefreshCw } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
-  "I have $100k for 6 months. Aggressive risk tolerance, very bullish on NVDA and MSFT.",
-  "Invest $50k over 1 year with moderate risk. Expecting AAPL and GOOGL to outperform.",
-  "Conservative $200k capital preservation portfolio for 3 months with low volatility.",
-  "Aggressive $75k portfolio targeting tech surge in NVDA and JPM."
+  {
+    label: "🔥 Tech Growth Focus ($50k)",
+    prompt: "Tech growth focus portfolio with $50k capital over 1 year. Bullish on NVDA and MSFT."
+  },
+  {
+    label: "🛡️ Conservative Balanced ($100k)",
+    prompt: "Conservative balanced portfolio with $100k capital preservation over 6 months with low volatility."
+  },
+  {
+    label: "⚡ Aggressive AI Stocks ($25k)",
+    prompt: "Aggressive AI stocks portfolio with $25k capital targeting massive growth in NVDA and GOOGL."
+  }
 ];
 
 const ChatInput = ({ onSubmit, isLoading }) => {
@@ -17,10 +25,10 @@ const ChatInput = ({ onSubmit, isLoading }) => {
     onSubmit(prompt);
   };
 
-  const handlePillClick = (text) => {
-    setPrompt(text);
+  const handlePillClick = (item) => {
+    setPrompt(item.prompt);
     if (!isLoading) {
-      onSubmit(text);
+      onSubmit(item.prompt);
     }
   };
 
@@ -96,49 +104,45 @@ const ChatInput = ({ onSubmit, isLoading }) => {
       </form>
 
       {/* Suggested Pills */}
-      <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginRight: '4px' }}>Suggested briefs:</span>
-        {SUGGESTED_PROMPTS.map((pill, index) => (
+      <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginRight: '4px', fontWeight: 600 }}>Suggested prompts:</span>
+        {SUGGESTED_PROMPTS.map((item, index) => (
           <button
             key={index}
             type="button"
-            onClick={() => handlePillClick(pill)}
+            onClick={() => handlePillClick(item)}
             disabled={isLoading}
             style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: 'var(--text-secondary)',
-              padding: '6px 12px',
-              borderRadius: '20px',
-              fontSize: '0.78rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: 'var(--text-primary)',
+              padding: '8px 16px',
+              borderRadius: '24px',
+              fontSize: '0.82rem',
+              fontWeight: 500,
               cursor: isLoading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
-              textAlign: 'left',
-              maxWidth: '350px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
             onMouseOver={(e) => {
               if (!isLoading) {
-                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)';
-                e.currentTarget.style.borderColor = 'var(--accent-blue)';
-                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)';
+                e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
               }
             }}
             onMouseOut={(e) => {
               if (!isLoading) {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
-                e.currentTarget.style.color = 'var(--text-secondary)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }
             }}
           >
-            {index === 0 && "🔥 "}
-            {index === 1 && "📈 "}
-            {index === 2 && "🛡️ "}
-            {index === 3 && "⚡ "}
-            {pill}
+            {item.label}
           </button>
         ))}
       </div>
