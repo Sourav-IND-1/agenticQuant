@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, MinusCircle, ShieldAlert } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 
 const RegimeIndicator = ({ regime = 'Bull' }) => {
   const getRegimeConfig = (r) => {
@@ -7,25 +7,28 @@ const RegimeIndicator = ({ regime = 'Bull' }) => {
       case 'bull':
       case 'bullish':
         return {
-          label: 'HMM REGIME: BULL MARKET',
-          badgeClass: 'badge-bull',
-          icon: <TrendingUp size={16} />,
-          desc: 'Low Volatility / Expansionary'
+          label: 'Macro Regime: Bull',
+          bg: '#064e3b',
+          border: '#065f46',
+          color: '#6ee7b7',
+          icon: <TrendingUp size={15} color="#6ee7b7" />
         };
       case 'bear':
       case 'bearish':
         return {
-          label: 'HMM REGIME: BEAR MARKET',
-          badgeClass: 'badge-bear',
-          icon: <TrendingDown size={16} />,
-          desc: 'High Volatility / Contraction'
+          label: 'Macro Regime: Bear',
+          bg: '#7f1d1d',
+          border: '#991b1b',
+          color: '#fca5a5',
+          icon: <TrendingDown size={15} color="#fca5a5" />
         };
       default:
         return {
-          label: 'HMM REGIME: NEUTRAL',
-          badgeClass: 'badge-neutral',
-          icon: <MinusCircle size={16} />,
-          desc: 'Range-bound Transition'
+          label: 'Macro Regime: Neutral',
+          bg: '#78350f',
+          border: '#92400e',
+          color: '#fde68a',
+          icon: <Activity size={15} color="#fde68a" />
         };
     }
   };
@@ -33,13 +36,20 @@ const RegimeIndicator = ({ regime = 'Bull' }) => {
   const cfg = getRegimeConfig(regime);
 
   return (
-    <div className={`glass-panel ${cfg.badgeClass}`} style={{ padding: '8px 16px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{ 
+      background: cfg.bg, 
+      border: `1px solid ${cfg.border}`, 
+      color: cfg.color,
+      padding: '6px 12px', 
+      borderRadius: '6px', 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '8px',
+      fontSize: '0.8rem',
+      fontWeight: 600
+    }}>
       {cfg.icon}
-      <div>
-        <div style={{ fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em' }}>
-          {cfg.label}
-        </div>
-      </div>
+      <span>{cfg.label}</span>
     </div>
   );
 };

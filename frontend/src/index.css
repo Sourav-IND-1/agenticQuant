@@ -1,30 +1,25 @@
-/* Global Quant UI Design System */
+/* Institutional Quant Dashboard UI Design System */
 :root {
-  --bg-main: #060911;
-  --bg-card: rgba(16, 23, 38, 0.7);
-  --bg-glass: rgba(22, 32, 53, 0.5);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(59, 130, 246, 0.4);
+  --bg-main: #0b0f19;
+  --bg-card: #111827;
+  --bg-input: #1f2937;
+  --border-color: #1f2937;
+  --border-hover: #374151;
   
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
   
-  --accent-blue: #3b82f6;
-  --accent-cyan: #06b6d4;
-  --accent-purple: #8b5cf6;
+  --accent-blue: #2563eb;
+  --accent-cyan: #38bdf8;
+  --accent-purple: #6366f1;
   
   --bull-green: #10b981;
-  --bull-glow: rgba(16, 185, 129, 0.25);
-  
-  --bear-red: #f43f5e;
-  --bear-glow: rgba(244, 63, 94, 0.25);
-  
+  --bear-red: #ef4444;
   --neutral-amber: #f59e0b;
-  --neutral-glow: rgba(245, 158, 11, 0.25);
   
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
@@ -36,14 +31,12 @@
 
 body {
   background-color: var(--bg-main);
-  background-image: 
-    radial-gradient(at 15% 15%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-    radial-gradient(at 85% 85%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
-  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
   overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Scrollbar styling */
@@ -55,92 +48,86 @@ body {
   background: var(--bg-main);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: #374151;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #4b5563;
 }
 
-/* Glassmorphism Classes */
+/* Clean Institutional Card Panels */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: border-color 0.15s ease;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-color: var(--border-hover);
 }
 
 .glass-input {
-  background: rgba(10, 15, 26, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
+  border: 1px solid #374151;
   color: var(--text-primary);
-  border-radius: 12px;
-  padding: 14px 18px;
+  border-radius: 6px;
+  padding: 10px 14px;
   font-family: var(--font-body);
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
   width: 100%;
 }
 
 .glass-input:focus {
   outline: none;
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 /* Typography Helpers */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #ffffff;
 }
 
 .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Glowing Badges */
+/* Institutional Status Badges */
 .badge-bull {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--bull-green);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
-  box-shadow: 0 0 12px var(--bull-glow);
 }
 
 .badge-bear {
-  background: rgba(244, 63, 94, 0.12);
-  color: var(--bear-red);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  box-shadow: 0 0 12px var(--bear-glow);
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .badge-neutral {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--neutral-amber);
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
-  box-shadow: 0 0 12px var(--neutral-glow);
 }
 
 /* Animations */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.02); }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
 .animate-pulse-slow {
-  animation: pulse-glow 3s infinite ease-in-out;
+  animation: pulse-dot 2s infinite ease-in-out;
 }
 
 /* Layout Utilities */
 .app-container {
-  max-width: 1600px;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }

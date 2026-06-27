@@ -2,7 +2,7 @@ import React from 'react';
 import PortfolioPie from './PortfolioPie';
 import ShapChart from './ShapChart';
 import BacktestChart from './BacktestChart';
-import { Target, Layers, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Target, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 const Dashboard = ({ briefData, quantResults }) => {
   const views = briefData?.views || [
@@ -21,15 +21,15 @@ const Dashboard = ({ briefData, quantResults }) => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Live Market Ticker Tape */}
-      <div className="glass-panel" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '24px', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)', letterSpacing: '0.05em' }}>UNIVERSE PRICES:</span>
+      <div className="glass-panel" style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: '24px', overflowX: 'auto', whiteSpace: 'nowrap', backgroundColor: '#111827' }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#38bdf8', letterSpacing: '0.05em' }}>MARKET FEED:</span>
         {stockPrices.map((stk, idx) => (
           <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>{stk.ticker}</span>
-            <span className="font-mono" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>${stk.price}</span>
-            <span className="font-mono" style={{ color: stk.up ? 'var(--bull-green)' : 'var(--bear-red)', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#f9fafb' }}>{stk.ticker}</span>
+            <span className="font-mono" style={{ color: '#d1d5db', fontSize: '0.85rem' }}>${stk.price}</span>
+            <span className="font-mono" style={{ color: stk.up ? '#34d399' : '#f87171', fontSize: '0.8rem', display: 'flex', alignItems: 'center' }}>
               {stk.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} {stk.chg}
             </span>
           </div>
@@ -37,29 +37,29 @@ const Dashboard = ({ briefData, quantResults }) => {
       </div>
 
       {/* Extracted Views & Goal Summary Banner */}
-      <div className="glass-panel" style={{ padding: '20px 24px', background: 'linear-gradient(135deg, rgba(16,23,38,0.8), rgba(30,41,59,0.4))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-          <Target size={18} color="var(--accent-blue)" />
-          <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Extracted Black-Litterman Views (Q Vector)</h3>
+      <div className="glass-panel" style={{ padding: '18px 20px', backgroundColor: '#111827' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <Target size={16} color="#38bdf8" />
+          <h3 style={{ fontSize: '0.95rem', margin: 0, color: '#f9fafb', fontWeight: 600 }}>Active Investor Views (Black-Litterman Q Vector)</h3>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {views.map((v, i) => (
-            <div key={i} style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', padding: '10px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontWeight: 800, color: '#ffffff' }}>{v.ticker}</span>
-              <span className="font-mono" style={{ color: 'var(--accent-cyan)', fontWeight: 700 }}>
+            <div key={i} style={{ background: '#1f2937', border: '1px solid #374151', padding: '8px 14px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontWeight: 600, color: '#ffffff', fontSize: '0.85rem' }}>{v.ticker}</span>
+              <span className="font-mono" style={{ color: '#38bdf8', fontWeight: 600, fontSize: '0.85rem' }}>
                 +{(v.expected_return * 100).toFixed(1)}%
               </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{v.type}</span>
+              <span style={{ fontSize: '0.7rem', color: '#9ca3af', textTransform: 'uppercase' }}>{v.type}</span>
             </div>
           ))}
           {views.length === 0 && (
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No explicit subjective views extracted. Using CAPM prior equilibrium returns.</span>
+            <span style={{ color: '#9ca3af', fontSize: '0.85rem' }}>No explicit subjective views extracted. Defaulting to equilibrium CAPM market priors.</span>
           )}
         </div>
       </div>
 
-      {/* 3-Column Visualizations Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+      {/* 2-Column Visualizations Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '20px' }}>
         <div style={{ minHeight: '340px' }}>
           <PortfolioPie weights={quantResults?.weights} capital={briefData?.capital || quantResults?.metrics?.capital || 100000} />
         </div>

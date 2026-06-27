@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { BarChart3, HelpCircle } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 const ShapChart = ({ featureImportances = [] }) => {
   const fallbackData = [
@@ -21,10 +21,10 @@ const ShapChart = ({ featureImportances = [] }) => {
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid var(--accent-purple)' }}>
-          <p style={{ margin: 0, fontWeight: 700, color: '#ffffff' }}>{payload[0].payload.name}</p>
-          <p className="font-mono" style={{ margin: 0, color: 'var(--accent-purple)', fontSize: '0.9rem' }}>
-            Contribution: {payload[0].value}%
+        <div className="glass-panel" style={{ padding: '10px 14px', border: '1px solid #3b82f6', backgroundColor: '#1f2937' }}>
+          <p style={{ margin: 0, fontWeight: 600, color: '#ffffff', fontSize: '0.9rem' }}>{payload[0].payload.name}</p>
+          <p className="font-mono" style={{ margin: '4px 0 0 0', color: '#60a5fa', fontSize: '0.95rem' }}>
+            Attribution Weight: {payload[0].value}%
           </p>
         </div>
       );
@@ -33,26 +33,26 @@ const ShapChart = ({ featureImportances = [] }) => {
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="glass-panel" style={{ padding: '20px', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#111827' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-        <BarChart3 size={18} color="var(--accent-purple)" />
-        <h3 style={{ fontSize: '1.05rem', margin: 0 }}>ML Alpha Drivers (SHAP / XGBoost)</h3>
-        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: 'rgba(139,92,246,0.15)', color: 'var(--accent-purple)', padding: '2px 8px', borderRadius: '12px' }}>
-          Explainable AI
+        <BarChart3 size={18} color="#38bdf8" />
+        <h3 style={{ fontSize: '1rem', margin: 0, color: '#f9fafb', fontWeight: 600 }}>Model Feature Attribution (XGBoost SHAP)</h3>
+        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '2px 8px', borderRadius: '4px', border: '1px solid #334155' }}>
+          Tree Shapley
         </span>
       </div>
 
       <div style={{ flex: 1, minHeight: '260px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-            <XAxis type="number" unit="%" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12 }} />
-            <YAxis dataKey="name" type="category" stroke="#64748b" tick={{ fill: '#f8fafc', fontSize: 12 }} width={90} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-            <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}>
+            <XAxis type="number" unit="%" stroke="#4b5563" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+            <YAxis dataKey="name" type="category" stroke="#4b5563" tick={{ fill: '#e5e7eb', fontSize: 12 }} width={100} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={index === 0 ? '#8b5cf6' : index === 1 ? '#a855f7' : index === 2 ? '#3b82f6' : '#06b6d4'} 
+                  fill={index === 0 ? '#2563eb' : index === 1 ? '#3b82f6' : index === 2 ? '#60a5fa' : '#93c5fd'} 
                 />
               ))}
             </Bar>
