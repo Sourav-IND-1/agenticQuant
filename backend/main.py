@@ -52,6 +52,8 @@ def _sanitize_for_json(obj: Any) -> Any:
     """Recursively converts numpy ndarrays, float64, int64, and custom objects to JSON-compatible Python types."""
     if isinstance(obj, np.ndarray):
         return obj.tolist()
+    elif isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
     elif isinstance(obj, (np.floating, float)):
         if np.isnan(obj) or np.isinf(obj):
             return 0.0
@@ -140,7 +142,14 @@ def analyze_strategy(req: AnalyzeRequest):
         )
 
         # 12. save_backtest(portfolio_id, risk_metrics["equity_curve"], ...)
-        save_backtest(portfolio_id, _sanitize_for_json(risk_metrics.get("equity_curve", [])))
+        save_backtest(
+            portfolio_id,
+            _sanitize_for_json(risk_metrics.get("equity_curve", [])),
+            sharpe=float(risk_metrics.get("sharpe", 0.0)),
+            cagr=float(risk_metrics.get("cagr", 0.0)),
+            max_drawdown=float(risk_metrics.get("max_drawdown", 0.0)),
+            win_rate=float(risk_metrics.get("win_rate", 0.5))
+        )
 
         # Construct unified results structure compatible with UI frontend
         results = {
