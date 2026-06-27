@@ -2,8 +2,9 @@ import os
 from pathlib import Path
 try:
     from dotenv import load_dotenv
-    # Load .env file using python-dotenv
-    load_dotenv()
+    # Explicitly load backend/.env with override to ensure .env values win over system env vars
+    _env_path = Path(__file__).resolve().parent / ".env"
+    load_dotenv(dotenv_path=_env_path, override=True)
 except ImportError:
     pass
 
