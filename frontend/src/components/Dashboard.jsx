@@ -61,7 +61,7 @@ const Dashboard = ({ briefData, quantResults }) => {
       {/* 3-Column Visualizations Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
         <div style={{ minHeight: '340px' }}>
-          <PortfolioPie weights={quantResults?.weights} />
+          <PortfolioPie weights={quantResults?.weights} capital={briefData?.capital || quantResults?.metrics?.capital || 100000} />
         </div>
         <div style={{ minHeight: '340px' }}>
           <ShapChart featureImportances={quantResults?.featureImportances} />
