@@ -1,5 +1,7 @@
 import json
 import re
+import requests
+import urllib3
 from typing import Dict, Any, List
 from pathlib import Path
 import sys
@@ -7,10 +9,30 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
 
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
+# Suppress InsecureRequestWarning when using verify=False
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Gemini REST API endpoint (bypasses gRPC SSL issues)
+GEMINI_REST_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+def _call_gemini_rest(prompt: str, timeout: float = 10.0) -> str:
+    """Call Gemini via REST API with SSL verification disabled to bypass corporate proxy issues."""
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 1024
+        }
+    }
+    resp = requests.post(
+        f"{GEMINI_REST_URL}?key={config.GEMINI_API_KEY}",
+        json=payload,
+        timeout=timeout,
+        verify=False  # Bypass SSL cert verification (corporate proxy/firewall)
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"]
 
 def _heuristic_fallback_extract(user_input: str, quant_context: Dict[str, Any], ml_predictions: Dict[str, Any]) -> Dict[str, Any]:
     """Intelligent regex and rule-based fallback if Gemini API is unconfigured or offline."""
@@ -79,14 +101,11 @@ def _heuristic_fallback_extract(user_input: str, quant_context: Dict[str, Any], 
     }
 
 def extract_investment_brief(user_input: str, quant_context: Dict[str, Any], ml_predictions: Dict[str, Any], regime: str) -> Dict[str, Any]:
-    """Extracts structured investment goals and views using Gemini with intelligent heuristic fallback."""
-    if not config.GEMINI_API_KEY or genai is None:
+    """Extracts structured investment goals and views using Gemini REST API with intelligent heuristic fallback."""
+    if not config.GEMINI_API_KEY:
         return _heuristic_fallback_extract(user_input, quant_context, ml_predictions)
         
     try:
-        genai.configure(api_key=config.GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-pro')
-        
         prompt = f"""
 You are a quantitative finance AI expert. Analyze the user's natural language investment goal and extract structured parameters.
 Context:
@@ -109,16 +128,18 @@ Return EXACTLY a valid JSON object matching this schema:
 }}
 Do not include markdown code formatting like ```json ... ```, output raw JSON only.
 """
-        response = model.generate_content(prompt)
-        text = response.text.strip()
+        raw_text = _call_gemini_rest(prompt, timeout=10.0)
+        text = raw_text.strip()
         if text.startswith("```json"):
             text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
         data = json.loads(text.strip())
         return data
     except Exception as e:
-        print(f"Gemini API fallback triggered: {e}")
+        print(f"Gemini REST API fallback triggered: {e}")
         return _heuristic_fallback_extract(user_input, quant_context, ml_predictions)
 
 if __name__ == "__main__":
