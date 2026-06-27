@@ -2,21 +2,32 @@ import os
 from pathlib import Path
 try:
     from dotenv import load_dotenv
+    # Load .env file using python-dotenv
     load_dotenv()
 except ImportError:
     pass
 
 # Base directory setup
 BASE_DIR = Path(__file__).resolve().parent
+
+# User-requested directory definitions
+MODEL_DIR = "backend/models/"
+CACHE_DIR = "backend/cache/"
+
+# Compatible Path objects for filesystem operations
 MODELS_DIR = BASE_DIR / "models"
-CACHE_DIR = BASE_DIR / "cache"
+CACHE_PATH_DIR = BASE_DIR / "cache"
 
 # Ensure directories exist
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+CACHE_PATH_DIR.mkdir(parents=True, exist_ok=True)
 
 # Core Asset Universe
 TICKERS = ["AAPL", "MSFT", "GOOGL", "NVDA", "XOM", "JPM"]
+
+# Financial Constants
+RISK_FREE_RATE = 0.04
+MARKET_PREMIUM = 0.055
 
 # Model File Paths
 PRIMARY_MODELS_PATH = MODELS_DIR / "primary_models.pkl"
@@ -28,7 +39,7 @@ HMM_MODEL_PATH = MODELS_DIR / "hmm_model.pkl"
 REGIME_MAP_PATH = MODELS_DIR / "regime_map.pkl"
 
 # Cache File Paths
-MARKET_DATA_CACHE_PATH = CACHE_DIR / "market_data.pkl"
+MARKET_DATA_CACHE_PATH = CACHE_PATH_DIR / "market_data.pkl"
 
 # API Keys & Settings
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
