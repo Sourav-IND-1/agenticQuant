@@ -1,0 +1,15 @@
+yfinance
+pandas
+numpy
+pypfopt
+xgboost
+scikit-learn
+shap
+hmmlearn
+fastapi
+uvicorn
+google-generativeai
+supabase
+python-dotenv
+statsmodels
+scipy
