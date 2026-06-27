@@ -1,88 +1,142 @@
 import numpy as np
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, List, Union
 
-def compute_quant_context(market_data: Dict[str, pd.DataFrame]) -> Dict[str, Dict[str, float]]:
-    """Computes foundational quantitative financial metrics for each asset.
+def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2: Union[Dict[str, pd.DataFrame], List[str]] = None) -> Dict[str, Any]:
+    """Computes quantitative financial metrics, rolling 60d correlations, and z-score normalization.
 
-    Returns dictionary containing:
-        - annualized_volatility
-        - beta
-        - sharpe_ratio
-        - momentum_20d
-        - momentum_60d
-        - capm_expected_return
+    Supports dual calling conventions:
+        compute_quant_context(ticker_list, cached_market_data)
+        compute_quant_context(cached_market_data)
     """
+    tickers = None
+    market_data = {}
+
+    if arg2 is None:
+        if isinstance(arg1, dict):
+            market_data = arg1
+            tickers = [t for t in market_data.keys() if t != 'SPY']
+        elif isinstance(arg1, list):
+            tickers = arg1
+    else:
+        if isinstance(arg1, list) and isinstance(arg2, dict):
+            tickers = arg1
+            market_data = arg2
+        elif isinstance(arg1, dict) and isinstance(arg2, list):
+            market_data = arg1
+            tickers = arg2
+
+    if not tickers:
+        tickers = [t for t in market_data.keys() if t != 'SPY']
+
     returns_dict = {}
     for ticker, df in market_data.items():
         if not df.empty and 'Close' in df.columns:
             returns_dict[ticker] = df['Close'].pct_change().dropna()
-            
+
     if not returns_dict:
         return {}
-        
-    # Align returns into a unified dataframe
-    returns_df = pd.DataFrame(returns_dict).dropna()
+
+    returns_df = pd.DataFrame(returns_dict).bfill().ffill().fillna(0.0)
     if returns_df.empty:
         return {}
-        
-    # Use equal-weighted universe mean return as synthetic SPY benchmark proxy
-    market_ret = returns_df.mean(axis=1)
-    market_var = market_ret.var()
-    if market_var == 0:
-        market_var = 1e-6
-        
-    rf = 0.04  # 4% risk-free rate
-    market_premium = 0.05  # 5% equity risk premium
-    
-    context = {}
-    for ticker in market_data.keys():
-        if ticker not in returns_df.columns:
+
+    # Get benchmark SPY returns or equal-weighted synthetic proxy
+    if 'SPY' in returns_df.columns:
+        spy_ret = returns_df['SPY']
+    else:
+        spy_ret = returns_df.mean(axis=1)
+
+    spy_var = float(spy_ret.var())
+    if spy_var == 0:
+        spy_var = 1e-6
+
+    rf = 0.04
+    market_premium = 0.055
+
+    # 7. Rolling 60-day correlation matrix between all tickers
+    rolling_60d_ret = returns_df.tail(60)
+    corr_matrix = rolling_60d_ret.corr().fillna(0.0)
+
+    raw_metrics = {}
+    for ticker in tickers:
+        if ticker not in returns_df.columns or ticker not in market_data:
             continue
-            
+
         asset_ret = returns_df[ticker]
         df = market_data[ticker]
-        
-        # Annualized Volatility
-        ann_vol = float(asset_ret.std() * np.sqrt(252))
-        
-        # Annualized Mean Return
-        ann_ret = float(asset_ret.mean() * 252)
-        
-        # Beta vs Benchmark
-        cov = float(asset_ret.cov(market_ret))
-        beta = cov / market_var
-        
-        # Sharpe Ratio
-        sharpe = (ann_ret - rf) / (ann_vol if ann_vol != 0 else 1e-6)
-        
-        # CAPM Expected Return
-        capm_ret = rf + beta * market_premium
-        
-        # Momentum 20 day and 60 day
         close = df['Close'].values
-        mom_20 = float((close[-1] / close[-20] - 1.0) if len(close) >= 20 else 0.0)
-        mom_60 = float((close[-1] / close[-60] - 1.0) if len(close) >= 60 else 0.0)
-        
-        context[ticker] = {
-            "annualized_volatility": round(ann_vol, 4),
+
+        # 1. Annualized volatility: sigma = daily_returns.std() * sqrt(252)
+        sigma = float(asset_ret.std() * np.sqrt(252))
+
+        # 2. Beta vs SPY: beta = Cov(stock_returns, spy_returns) / Var(spy_returns)
+        cov = float(asset_ret.cov(spy_ret))
+        beta = cov / spy_var
+
+        # 3. Sharpe ratio: (annualized_return - 0.04) / sigma
+        ann_ret = float(asset_ret.mean() * 252)
+        sharpe = (ann_ret - rf) / (sigma if sigma != 0 else 1e-6)
+
+        # 4. 20-day momentum: (price_today / price_20d_ago) - 1
+        mom_20d = float((close[-1] / close[-20] - 1.0) if len(close) >= 20 else 0.0)
+
+        # 5. 60-day momentum: (price_today / price_60d_ago) - 1
+        mom_60d = float((close[-1] / close[-60] - 1.0) if len(close) >= 60 else 0.0)
+
+        # 6. CAPM expected return: 0.04 + beta * 0.055
+        expected_return_capm = rf + beta * market_premium
+
+        # Extract correlations for this ticker against all other valid tickers
+        correlations = {}
+        for other_t in tickers:
+            if other_t in corr_matrix.columns and ticker in corr_matrix.index:
+                correlations[other_t] = round(float(corr_matrix.loc[ticker, other_t]), 4)
+            else:
+                correlations[other_t] = 0.0
+
+        raw_metrics[ticker] = {
+            "annual_vol": round(sigma, 4),
             "beta": round(beta, 4),
+            "sharpe": round(sharpe, 4),
+            "momentum_20d": round(mom_20d, 4),
+            "momentum_60d": round(mom_60d, 4),
+            "expected_return_capm": round(expected_return_capm, 4),
+            "correlations": correlations,
+            # Backward compatibility aliases for existing caller modules
+            "annualized_volatility": round(sigma, 4),
             "sharpe_ratio": round(sharpe, 4),
-            "momentum_20d": round(mom_20, 4),
-            "momentum_60d": round(mom_60, 4),
-            "capm_expected_return": round(capm_ret, 4),
-            "latest_price": round(float(close[-1]), 2)
+            "capm_expected_return": round(expected_return_capm, 4),
+            "latest_price": round(float(close[-1]), 2) if len(close) > 0 else 0.0
         }
-        
-    return context
+
+    # 8. Z-score normalization of all metrics across universe: (x - mean) / std
+    metric_keys = ["annual_vol", "beta", "sharpe", "momentum_20d", "momentum_60d", "expected_return_capm"]
+    if len(raw_metrics) > 1:
+        for k in metric_keys:
+            vals = np.array([m[k] for m in raw_metrics.values()])
+            mean_val = np.mean(vals)
+            std_val = np.std(vals)
+            for t in raw_metrics:
+                z_val = float((raw_metrics[t][k] - mean_val) / std_val) if std_val > 1e-8 else 0.0
+                if "z_scores" not in raw_metrics[t]:
+                    raw_metrics[t]["z_scores"] = {}
+                raw_metrics[t]["z_scores"][k] = round(z_val, 4)
+    else:
+        for t in raw_metrics:
+            raw_metrics[t]["z_scores"] = {k: 0.0 for k in metric_keys}
+
+    return raw_metrics
 
 if __name__ == "__main__":
     import sys
     from pathlib import Path
     sys.path.append(str(Path(__file__).resolve().parent.parent))
     from data.market_data import get_live_market_data
-    
+    import config
+
     data = get_live_market_data()
-    ctx = compute_quant_context(data)
-    for t, metrics in ctx.items():
-        print(f"{t}: Vol={metrics['annualized_volatility']:.1%}, Beta={metrics['beta']:.2f}, CAPM Ret={metrics['capm_expected_return']:.1%}, Sharpe={metrics['sharpe_ratio']:.2f}")
+    ctx = compute_quant_context(config.TICKERS, data)
+    for symbol, details in ctx.items():
+        print(f"[{symbol}] Vol={details['annual_vol']:.2f}, Beta={details['beta']:.2f}, Sharpe={details['sharpe']:.2f}, CAPM Ret={details['expected_return_capm']:.2%}")
+        print(f"  Z-Scores: {details['z_scores']}")
