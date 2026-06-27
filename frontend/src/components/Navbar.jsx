@@ -2,7 +2,7 @@ import React from 'react';
 import { Activity, BarChart2 } from 'lucide-react';
 import RegimeIndicator from './RegimeIndicator';
 
-const Navbar = ({ regime = 'Bull', onOpenHistory }) => {
+const Navbar = ({ regime, onOpenHistory }) => {
   return (
     <header className="glass-panel" style={{ padding: '16px 24px', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#111827' }}>
       {/* Brand & Logo - Left Side */}
@@ -35,7 +35,9 @@ const Navbar = ({ regime = 'Bull', onOpenHistory }) => {
 
       {/* Center Macro Regime Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <RegimeIndicator regime={regime} />
+        {regime ? <RegimeIndicator regime={regime} /> : (
+          <span style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic' }}>Awaiting Analysis...</span>
+        )}
       </div>
 
       {/* Live NYSE Status Indicator & Archives - Right Side */}

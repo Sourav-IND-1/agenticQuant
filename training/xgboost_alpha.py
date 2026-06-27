@@ -1,4 +1,5 @@
 import os
+import sys
 import yfinance as yf
 import pickle
 import pandas as pd
@@ -10,12 +11,16 @@ from sklearn.feature_selection import mutual_info_classif
 from xgboost import XGBClassifier
 from sklearn.preprocessing import LabelEncoder
 
+# Import tickers from backend config so training stays in sync
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'backend'))
+import config
+
 # Ensure models directory exists for output
 os.makedirs("../backend/models", exist_ok=True)
 os.makedirs("../backend/cache", exist_ok=True)
 
-TICKERS = ["AAPL", "MSFT", "GOOGL", "NVDA", "XOM", "JPM"]
-FEATURE_COLS = ['RSI', 'MACD', 'MACD_signal', 'BB_upper', 'BB_lower', 'ADX', 'MA5', 'MA20', 'MA50', 'Volume_change']
+TICKERS = config.TICKERS
+FEATURE_COLS = config.FEATURE_COLS
 
 def fetch_data():
     data = {}

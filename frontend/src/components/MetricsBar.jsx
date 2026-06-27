@@ -1,13 +1,16 @@
 import React from 'react';
 import { TrendingUp, AlertTriangle, Activity, DollarSign, Award } from 'lucide-react';
 
-const MetricsBar = ({ metrics = {} }) => {
+const MetricsBar = ({ metrics }) => {
+  if (!metrics) return null;
+
+  // Backend sends snake_case, mock sends camelCase — handle both
   const defaultMetrics = {
-    expectedReturn: metrics.expectedReturn ?? 0.148,
-    sharpeRatio: metrics.sharpeRatio ?? 2.14,
-    var95: metrics.var95 ?? -0.032,
-    maxDrawdown: metrics.maxDrawdown ?? -0.085,
-    capital: metrics.capital ?? 100000
+    expectedReturn: metrics.expectedReturn ?? metrics.annualized_return ?? metrics.cagr ?? 0,
+    sharpeRatio: metrics.sharpeRatio ?? metrics.sharpe ?? 0,
+    var95: metrics.var95 ?? metrics.cvar_95 ?? 0,
+    maxDrawdown: metrics.maxDrawdown ?? metrics.max_drawdown ?? 0,
+    capital: metrics.capital ?? 0
   };
 
   const cards = [

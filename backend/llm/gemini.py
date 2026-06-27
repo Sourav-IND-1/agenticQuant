@@ -43,12 +43,28 @@ GEMINI_MODEL_CHAIN = [
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "capital": {"type": "number", "description": "Investment capital in USD"},
+        "capital": {"type": "number", "description": "Investment capital in USD. Can be 0 if current_holdings provided."},
         "horizon_days": {"type": "integer", "description": "Investment horizon in days"},
         "risk_tolerance": {
             "type": "string",
             "enum": ["conservative", "moderate", "aggressive"],
             "description": "Risk tolerance level"
+        },
+        "max_sell_pct": {
+            "type": "number",
+            "description": "Maximum percentage of portfolio to sell as decimal (e.g. 0.30 for 30%)"
+        },
+        "current_holdings": {
+            "type": "object",
+            "description": "Mapping of ticker symbol to its holdings data",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "shares": {"type": "number"},
+                    "avg_cost": {"type": "number"}
+                },
+                "required": ["shares", "avg_cost"]
+            }
         },
         "views": {
             "type": "array",
@@ -67,7 +83,7 @@ RESPONSE_SCHEMA = {
             "description": "List of subjective return views per ticker"
         }
     },
-    "required": ["capital", "horizon_days", "risk_tolerance", "views"]
+    "required": ["capital", "horizon_days", "risk_tolerance", "views", "max_sell_pct", "current_holdings"]
 }
 
 
@@ -96,20 +112,22 @@ def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
 
 === INSTRUCTIONS ===
 1. Extract capital (USD), horizon (days), and risk tolerance from the user's text.
-2. For each ticker the user mentions (universe: {config.TICKERS}), generate an "expected_return" view.
-3. GROUND your expected_return views in the provided volatility and beta numbers:
+2. Extract the user's current holdings. For each holding, extract the ticker, shares, and avg_cost. If they hold a stock but no cost is given, use 0 for avg_cost.
+3. Extract max_sell_pct if specified (e.g., "don't sell more than 30%" -> 0.30). Default to 1.0 if not specified.
+4. For each ticker the user mentions with a view (universe: {config.TICKERS}), generate an "expected_return" view.
+5. GROUND your expected_return views in the provided volatility and beta numbers:
    - High-beta stocks should have wider return ranges.
    - Use CAPM expected return as the base, then adjust based on user sentiment.
    - Cap aggressive bullish views at capm_return + 2× annual_vol.
    - Cap bearish views at capm_return - 1.5× annual_vol.
-4. If the user doesn't specify capital, default to 50000.0.
-5. If the user doesn't specify horizon, default to 180 days.
-6. If the user doesn't specify risk, default to "moderate".
+6. If the user doesn't specify capital, default to 0.0 (it will be calculated from holdings).
+7. If the user doesn't specify horizon, default to 180 days.
+8. If the user doesn't specify risk, default to "moderate".
 
 === USER INPUT ===
 "{user_input}"
 
-Return a JSON object with: capital (float), horizon_days (int), risk_tolerance (string), views (array of objects with ticker, type="absolute", expected_return as float)."""
+Return a JSON object with: capital (float), horizon_days (int), risk_tolerance (string), max_sell_pct (float), current_holdings (object mapping ticker to shares and avg_cost), and views (array of objects with ticker, type="absolute", expected_return as float)."""
 
 
 def _call_gemini_api(prompt: str, timeout: float = 15.0) -> Dict[str, Any]:
@@ -255,11 +273,19 @@ def _heuristic_fallback(user_input: str, quant_context: Dict[str, Any]) -> Dict[
                 "type": "absolute",
                 "expected_return": round(float(exp_ret), 4)
             })
+            
+    # --- Max Sell Pct extraction ---
+    max_sell_pct = 1.0
+    pct_match = re.search(r'not sell more than (\d+)', text)
+    if pct_match:
+        max_sell_pct = float(pct_match.group(1)) / 100.0
 
     return {
         "capital": capital,
         "horizon_days": horizon_days,
         "risk_tolerance": risk_tolerance,
+        "max_sell_pct": max_sell_pct,
+        "current_holdings": {},
         "views": views
     }
 
@@ -290,9 +316,11 @@ def extract_investment_brief(user_input: str, quant_context: Dict[str, Any],
         result = _call_gemini_api(prompt, timeout=15.0)
 
         # Validate required fields exist
-        result.setdefault("capital", 50000.0)
+        result.setdefault("capital", 0.0)
         result.setdefault("horizon_days", 180)
         result.setdefault("risk_tolerance", "moderate")
+        result.setdefault("max_sell_pct", 1.0)
+        result.setdefault("current_holdings", {})
         result.setdefault("views", [])
 
         return result

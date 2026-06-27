@@ -24,7 +24,20 @@ MODELS_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_DIR.mkdir(parents=True, exist_ok=True)
 
 # Core Asset Universe
-TICKERS = ["AAPL", "MSFT", "GOOGL", "NVDA", "XOM", "JPM"]
+TICKERS = [
+    # Tech
+    "AAPL", "MSFT", "GOOGL", "NVDA", "AMZN", "META", "TSLA",
+    # Finance
+    "JPM", "GS", "V",
+    # Energy
+    "XOM", "CVX",
+    # Healthcare
+    "JNJ", "UNH",
+    # Consumer
+    "WMT", "KO",
+    # Indian Markets (NSE)
+    "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS",
+]
 
 # Financial Constants
 RISK_FREE_RATE = 0.04

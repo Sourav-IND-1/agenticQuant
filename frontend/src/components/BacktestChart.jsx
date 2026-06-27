@@ -40,7 +40,7 @@ const BacktestChart = ({ backtestData = [] }) => {
         </span>
       </div>
 
-      <div style={{ flex: 1, minHeight: '260px' }}>
+      <div style={{ width: '100%', height: 300, marginTop: '10px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
             <defs>

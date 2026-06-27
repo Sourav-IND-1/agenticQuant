@@ -31,6 +31,7 @@ from backend.ml.predictor import predict_ticker, predict_alphas
 from backend.regime.hmm_detector import detect_regime, detect_market_regime
 from backend.quant.risk import compute_risk_metrics
 from backend.database.db_operations import save_query, save_portfolio, save_backtest, get_strategy_history
+from backend.quant.rebalancer import analyze_current_portfolio, generate_rebalancing_actions, calculate_before_after_metrics
 
 app = FastAPI(
     title="Quant Trading Intelligence Platform API",
@@ -105,6 +106,21 @@ def analyze_strategy(req: AnalyzeRequest):
 
         # 3. gemini_output = gemini_extract(user_input, quant_context)
         gemini_output = extract_investment_brief(user_input, quant_context)
+        
+        current_holdings = gemini_output.get("current_holdings", {})
+        max_sell_pct = gemini_output.get("max_sell_pct", 1.0)
+        
+        # Get current prices for rebalancing
+        current_prices = {}
+        for ticker in list(current_holdings.keys()) + config.TICKERS:
+            if ticker in market_data and not market_data[ticker].empty and "Close" in market_data[ticker].columns:
+                try:
+                    current_prices[ticker] = float(market_data[ticker]["Close"].iloc[-1])
+                except (TypeError, ValueError, IndexError):
+                    pass
+                
+        # Analyze current portfolio
+        portfolio_health = analyze_current_portfolio(current_holdings, current_prices, market_data)
 
         # 4. validated = math_validator(gemini_output, quant_context)
         validated = validate_full(gemini_output, quant_context)
@@ -123,11 +139,18 @@ def analyze_strategy(req: AnalyzeRequest):
         regime_str = regime.get("regime", "Neutral")
 
         # 8. final_weights = bl_optimizer(validated, quant_context, ml_signals, regime)
-        final_weights, _ = optimize_portfolio(validated, quant_context, ml_signals, regime)
+        final_weights, _ = optimize_portfolio(validated, quant_context, ml_signals, regime_str)
 
         # 9. risk_metrics = compute_risk(final_weights, market_data, capital)
-        capital = float(validated.get("capital", gemini_output.get("capital", 100000.0)))
+        # Use existing capital or total_value from holdings
+        extracted_capital = float(validated.get("capital", gemini_output.get("capital", 0.0)))
+        capital = float(portfolio_health["total_value"]) if portfolio_health["total_value"] > 0 else (extracted_capital if extracted_capital > 0 else 100000.0)
+        
         risk_metrics = compute_risk_metrics(final_weights, market_data, capital)
+        
+        # Rebalancing actions & before/after metrics
+        rebalancing_actions = generate_rebalancing_actions(current_holdings, final_weights, current_prices, max_sell_pct)
+        before_after = calculate_before_after_metrics(current_holdings, final_weights, market_data, current_prices)
 
         # 10. query_id = save_query(user_input, gemini_output)
         query_id = save_query(user_input, _sanitize_for_json(gemini_output))
@@ -162,7 +185,10 @@ def analyze_strategy(req: AnalyzeRequest):
                 {"feature": "ADX", "importance": 0.12},
                 {"feature": "BB_lower", "importance": 0.08}
             ]),
-            "backtest": risk_metrics.get("equity_curve", [])
+            "backtest": risk_metrics.get("equity_curve", []),
+            "rebalancing_actions": rebalancing_actions,
+            "portfolio_health": portfolio_health,
+            "before_after_metrics": before_after
         }
 
         payload = {

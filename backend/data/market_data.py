@@ -72,9 +72,9 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
         tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
         up_move = df['High'] - df['High'].shift()
         down_move = df['Low'].shift() - df['Low']
-        plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
-        minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
-        tr14 = pd.Series(tr, index=df.index).rolling(window=14, min_periods=1).sum().replace(0, 1e-10)
+        plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0).flatten()
+        minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0).flatten()
+        tr14 = pd.Series(tr.values.flatten(), index=df.index).rolling(window=14, min_periods=1).sum().replace(0, 1e-10)
         plus_di = 100 * (pd.Series(plus_dm, index=df.index).rolling(window=14, min_periods=1).sum() / tr14)
         minus_di = 100 * (pd.Series(minus_dm, index=df.index).rolling(window=14, min_periods=1).sum() / tr14)
         dx = 100 * ((plus_di - minus_di).abs() / (plus_di + minus_di).replace(0, 1e-10))
@@ -125,6 +125,8 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
         if yf is not None:
             try:
                 df = yf.download(symbol, start="2008-01-01", end=today_str, progress=False)
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
             except Exception as e:
                 print(f"yFinance live download failed for {symbol}: {e}")
                 

@@ -32,12 +32,19 @@ def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2:
     returns_dict = {}
     for ticker, df in market_data.items():
         if not df.empty and 'Close' in df.columns:
-            returns_dict[ticker] = df['Close'].pct_change().dropna()
+            returns_dict[ticker] = df['Close'].squeeze().pct_change().dropna()
 
-    if not returns_dict:
+    # Ensure there is valid data to prevent "scalar without index" pandas error
+    valid_series = [s for s in returns_dict.values() if not s.empty]
+    if not valid_series:
         return {}
 
-    returns_df = pd.DataFrame(returns_dict).bfill().ffill().fillna(0.0)
+    try:
+        returns_df = pd.DataFrame(returns_dict).bfill().ffill().fillna(0.0)
+    except Exception:
+        # Fallback if pandas rejects the dict (e.g., mismatched shapes or scalars)
+        returns_df = pd.DataFrame(returns_dict, index=valid_series[0].index).bfill().ffill().fillna(0.0)
+
     if returns_df.empty:
         return {}
 
@@ -65,7 +72,7 @@ def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2:
 
         asset_ret = returns_df[ticker]
         df = market_data[ticker]
-        close = df['Close'].values
+        close = np.squeeze(df['Close'].values)
 
         # 1. Annualized volatility: sigma = daily_returns.std() * sqrt(252)
         sigma = float(asset_ret.std() * np.sqrt(252))

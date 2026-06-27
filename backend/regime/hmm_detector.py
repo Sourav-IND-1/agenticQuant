@@ -97,16 +97,19 @@ def detect_regime(market_data: Optional[Dict[str, pd.DataFrame]] = None) -> Dict
         return {"regime": "Neutral", "state_id": 1, "confidence": 0.65}
 
     # Take last 60 days (or more to ensure valid rolling vol)
-    spy_tail = spy_df.tail(85).copy()
+    close_series = spy_df["Close"].squeeze().tail(85)
 
-    # 2. Compute daily returns: spy_returns = spy['Close'].pct_change()
-    spy_tail["returns"] = spy_tail["Close"].pct_change()
+    # 2. Compute daily returns
+    returns = close_series.pct_change()
 
     # 3. Compute 20-day rolling volatility
-    spy_tail["volatility"] = spy_tail["returns"].rolling(window=20).std()
+    volatility = returns.rolling(window=20).std()
 
     # Drop NA rows resulting from pct_change and rolling std
-    valid_data = spy_tail.dropna(subset=["returns", "volatility"])
+    valid_data = pd.DataFrame({
+        "returns": returns,
+        "volatility": volatility
+    }).dropna()
 
     if valid_data.empty or len(valid_data) == 0:
         return {"regime": "Neutral", "state_id": 1, "confidence": 0.65}
