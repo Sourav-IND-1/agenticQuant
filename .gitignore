@@ -19,3 +19,4 @@ build/
 # Large Data
 *.csv
 *.db
+backend/cache/
