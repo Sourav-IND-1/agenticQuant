@@ -146,14 +146,33 @@ def mutual_information_filter(X_train, y_train, threshold=0.01):
 def snr_check(X_train):
     return {col: abs(X_train[col].mean()) / X_train[col].std() if X_train[col].std() != 0 else 0 for col in X_train.columns}
 
-def purge_embargo_split(df, split_date='2024-01-01', purge_days=10, embargo_days=5):
-    split = pd.Timestamp(split_date)
-    train = df[df.index < split - pd.Timedelta(days=purge_days)]
-    test = df[df.index >= split + pd.Timedelta(days=embargo_days)]
-    return train, test
+class PurgedKFold:
+    def __init__(self, n_splits=5, purge_days=10, embargo_days=5):
+        self.n_splits = n_splits
+        self.purge_days = purge_days
+        self.embargo_days = embargo_days
 
-def run_pre_modeling_matrix(df, ticker, feature_cols, split_date='2024-01-01'):
-    train, test = purge_embargo_split(df, split_date)
+    def split(self, df):
+        indices = np.arange(len(df))
+        test_size = len(df) // self.n_splits
+        for i in range(self.n_splits):
+            test_start = i * test_size
+            test_end = (i + 1) * test_size if i < self.n_splits - 1 else len(df)
+            
+            test_indices = indices[test_start:test_end]
+            
+            train_mask = np.ones(len(df), dtype=bool)
+            train_mask[test_start:test_end] = False
+            
+            purge_start = max(0, test_start - self.purge_days)
+            train_mask[purge_start:test_start] = False
+            
+            embargo_end = min(len(df), test_end + self.embargo_days)
+            train_mask[test_end:embargo_end] = False
+            
+            yield indices[train_mask], test_indices
+
+def run_pre_modeling_matrix(train, test, feature_cols):
     
     X_train = train[feature_cols].copy()
     y_train = train['label'].values
@@ -213,7 +232,28 @@ def main():
         df['label'] = le.fit_transform(df['label'])
         label_encoders[ticker] = le
         
-        X_train, y_train, X_test, y_test, t_params = run_pre_modeling_matrix(df, ticker, FEATURE_COLS)
+        cv = PurgedKFold(n_splits=5)
+        fold_scores = []
+        for train_idx, test_idx in cv.split(df):
+            train_fold = df.iloc[train_idx]
+            test_fold = df.iloc[test_idx]
+            if len(train_fold) < 100 or len(test_fold) < 20: continue
+            
+            X_train, y_train, X_test, y_test, _ = run_pre_modeling_matrix(train_fold, test_fold, FEATURE_COLS)
+            if len(X_train) == 0 or len(X_test) == 0: continue
+            
+            counts = Counter(y_train)
+            scale = counts.get(1, 1) / max(counts.get(0, 1), 1)
+            model = XGBClassifier(n_estimators=100, max_depth=4, learning_rate=0.05, scale_pos_weight=scale, random_state=42)
+            model.fit(X_train, y_train)
+            acc = (model.predict(X_test) == y_test).mean()
+            fold_scores.append(acc)
+            
+        print(f"  CPCV Average Accuracy for {ticker}: {np.mean(fold_scores)*100:.2f}%")
+        
+        # Train FINAL model on ALL data minus last 5 days (embargo for safety)
+        final_train = df.iloc[:-5]
+        X_train, y_train, _, _, t_params = run_pre_modeling_matrix(final_train, final_train, FEATURE_COLS)
         transform_params_all[ticker] = t_params
         
         counts = Counter(y_train)
