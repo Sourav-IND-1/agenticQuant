@@ -119,7 +119,8 @@ def optimize_portfolio(
     # ──────────────────────────────────────────────────────────────────────
     # Step 2 — REGIME WEIGHT ADJUSTMENT
     # ──────────────────────────────────────────────────────────────────────
-    bounds = REGIME_BOUNDS.get(regime, REGIME_BOUNDS["Neutral"])
+    reg_str = regime.get("regime", "Neutral") if isinstance(regime, dict) else str(regime)
+    bounds = REGIME_BOUNDS.get(reg_str, REGIME_BOUNDS["Neutral"])
     max_w = bounds["max_weight"]
     min_w = bounds["min_weight"]
 
