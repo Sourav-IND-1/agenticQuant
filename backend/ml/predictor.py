@@ -96,11 +96,16 @@ def predict_ticker(ticker: str, raw_features: Union[pd.DataFrame, pd.Series, Dic
     raw_pred = 1
     if primary_model is not None and hasattr(primary_model, "predict_proba"):
         try:
-            probs = primary_model.predict_proba(latest_X.values)
-            probabilities = [round(float(p), 4) for p in probs[0]]
-            raw_pred = int(np.argmax(probs[0]))
-        except Exception:
-            pass
+            # Explicit shape check
+            expected_features = getattr(primary_model, "n_features_in_", latest_X.shape[1])
+            if latest_X.shape[1] != expected_features:
+                print(f"[predict_ticker] WARNING: Feature mismatch for {ticker}. Expected {expected_features}, got {latest_X.shape[1]}.")
+            else:
+                probs = primary_model.predict_proba(latest_X.values)
+                probabilities = [round(float(p), 4) for p in probs[0]]
+                raw_pred = int(np.argmax(probs[0]))
+        except Exception as e:
+            print(f"[predict_ticker] Primary model prediction failed for {ticker}: {e}")
 
     # Pass probabilities to meta XGBoost -> get confidence
     confidence = 0.65
@@ -109,7 +114,8 @@ def predict_ticker(ticker: str, raw_features: Union[pd.DataFrame, pd.Series, Dic
             prob_arr = np.array([probabilities]) if len(probabilities) > 0 else np.array([[0.5, 0.5]])
             meta_probs = meta_model.predict_proba(prob_arr)
             confidence = round(float(np.max(meta_probs[0])), 4)
-        except Exception:
+        except Exception as e:
+            print(f"[predict_ticker] Meta model prediction failed for {ticker}: {e}")
             confidence = max(probabilities) if probabilities else 0.65
     else:
         confidence = max(probabilities) if probabilities else 0.65

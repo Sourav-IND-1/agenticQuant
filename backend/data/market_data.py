@@ -112,7 +112,7 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
             print(f"Cache inspection warning: {e}")
 
     # If cache is fresh and contains required universe, return immediately (sub-100ms)
-    all_symbols = list(config.TICKERS) + ["SPY"]
+    all_symbols = list(config.TICKERS) + ["^NSEI"]
     if is_cache_fresh and all(sym in cache and not cache[sym].empty for sym in all_symbols):
         # Enforce flat columns across the entire app
         for sym, df in cache.items():

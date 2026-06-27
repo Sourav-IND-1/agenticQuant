@@ -25,7 +25,7 @@ const RebalancingTable = ({ actions, currentWeights, targetWeights }) => {
               <th style={{ padding: '10px 8px', fontWeight: 500 }}>Current Weight</th>
               <th style={{ padding: '10px 8px', fontWeight: 500 }}>Target Weight</th>
               <th style={{ padding: '10px 8px', fontWeight: 500 }}>Action</th>
-              <th style={{ padding: '10px 8px', fontWeight: 500 }}>Amount (USD)</th>
+              <th style={{ padding: '10px 8px', fontWeight: 500 }}>Amount (₹)</th>
               <th style={{ padding: '10px 8px', fontWeight: 500 }}>Reason</th>
             </tr>
           </thead>
@@ -43,7 +43,7 @@ const RebalancingTable = ({ actions, currentWeights, targetWeights }) => {
                   {act.action}
                 </td>
                 <td className="font-mono" style={{ padding: '12px 8px', color: '#d1d5db' }}>
-                  ${act.dollar_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  ₹{act.dollar_amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                 </td>
                 <td style={{ padding: '12px 8px', color: '#9ca3af', fontSize: '0.8rem' }}>
                   {act.reason}

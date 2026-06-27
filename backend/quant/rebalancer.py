@@ -137,7 +137,7 @@ def generate_rebalancing_actions(
                 "reason": "Stock not in target portfolio"
             })
             total_sell_amount_proposed += curr_val
-        elif diff_w < -0.05:
+        elif diff_w < -0.01:
             raw_actions.append({
                 "ticker": ticker,
                 "action": "SELL PARTIAL",
@@ -145,7 +145,7 @@ def generate_rebalancing_actions(
                 "reason": f"Overweight by {abs(diff_w)*100:.1f}%"
             })
             total_sell_amount_proposed += abs(dollar_diff)
-        elif diff_w > 0.05:
+        elif diff_w > 0.01:
             raw_actions.append({
                 "ticker": ticker,
                 "action": "BUY MORE",
@@ -158,7 +158,7 @@ def generate_rebalancing_actions(
                     "ticker": ticker,
                     "action": "HOLD",
                     "dollar_amount": curr_val,
-                    "reason": "Within 5% of target"
+                    "reason": "Within 1% of target"
                 })
 
     max_sell_dollars = total_value * max_sell_pct

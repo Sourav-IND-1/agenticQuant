@@ -8,7 +8,7 @@ const HistoryPanel = ({ isOpen, onClose, history = [], onSelectHistory }) => {
     {
       id: '1',
       timestamp: '2026-06-27 14:30',
-      prompt: 'Aggressive $100k tech growth portfolio focusing on NVDA and MSFT',
+      prompt: 'Aggressive ₹10L Nifty IT portfolio focusing on TCS and Infosys',
       regime: 'Bull',
       expectedReturn: 0.165,
       sharpeRatio: 2.34
@@ -16,7 +16,7 @@ const HistoryPanel = ({ isOpen, onClose, history = [], onSelectHistory }) => {
     {
       id: '2',
       timestamp: '2026-06-27 12:15',
-      prompt: 'Conservative $250k capital preservation for 3 months',
+      prompt: 'Conservative ₹25L capital preservation for 3 months in HDFC Bank and ITC',
       regime: 'Neutral',
       expectedReturn: 0.072,
       sharpeRatio: 1.85
@@ -24,7 +24,7 @@ const HistoryPanel = ({ isOpen, onClose, history = [], onSelectHistory }) => {
     {
       id: '3',
       timestamp: '2026-06-26 16:45',
-      prompt: 'Balanced $50k portfolio expecting AAPL bounce',
+      prompt: 'Balanced ₹5L portfolio expecting Reliance bounce over 6 months',
       regime: 'Bull',
       expectedReturn: 0.118,
       sharpeRatio: 1.95

@@ -23,25 +23,36 @@ CACHE_PATH_DIR = BASE_DIR / "cache"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 CACHE_PATH_DIR.mkdir(parents=True, exist_ok=True)
 
-# Core Asset Universe
+# Core Asset Universe — Nifty 50 (NSE India)
 TICKERS = [
-    # Tech
-    "AAPL", "MSFT", "GOOGL", "NVDA", "AMZN", "META", "TSLA",
-    # Finance
-    "JPM", "GS", "V",
-    # Energy
-    "XOM", "CVX",
-    # Healthcare
-    "JNJ", "UNH",
-    # Consumer
-    "WMT", "KO",
-    # Indian Markets (NSE)
-    "RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS",
+    # IT / Technology
+    "TCS.NS", "INFY.NS", "WIPRO.NS", "HCLTECH.NS", "TECHM.NS",
+    # Banking & Finance
+    "HDFCBANK.NS", "ICICIBANK.NS", "KOTAKBANK.NS", "SBIN.NS", "AXISBANK.NS",
+    "INDUSINDBK.NS", "HDFCLIFE.NS", "SBILIFE.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS",
+    # Energy & Conglomerate
+    "RELIANCE.NS", "ONGC.NS", "BPCL.NS", "POWERGRID.NS", "NTPC.NS", "COALINDIA.NS",
+    # Consumer & FMCG
+    "HINDUNILVR.NS", "ITC.NS", "BRITANNIA.NS", "NESTLEIND.NS", "TATACONSUM.NS",
+    # Pharma & Healthcare
+    "SUNPHARMA.NS", "DRREDDY.NS", "CIPLA.NS", "APOLLOHOSP.NS",
+    # Auto & Engineering
+    "MARUTI.NS", "TATAMOTORS.NS", "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS", "M&M.NS",
+    # Metals & Materials
+    "TATASTEEL.NS", "JSWSTEEL.NS", "HINDALCO.NS", "GRASIM.NS", "ULTRACEMCO.NS",
+    # Telecom
+    "BHARTIARTL.NS",
+    # Infrastructure & Defence
+    "LT.NS", "ADANIENT.NS", "ADANIPORTS.NS", "BEL.NS",
+    # Luxury & Retail
+    "TITAN.NS", "TRENT.NS",
+    # Paint
+    "ASIANPAINT.NS",
 ]
 
-# Financial Constants
-RISK_FREE_RATE = 0.04
-MARKET_PREMIUM = 0.055
+# Financial Constants (India-adjusted)
+RISK_FREE_RATE = 0.065   # RBI repo rate ~6.5%
+MARKET_PREMIUM = 0.05    # India equity risk premium ~5%
 
 # Model File Paths
 PRIMARY_MODELS_PATH = MODELS_DIR / "primary_models.pkl"

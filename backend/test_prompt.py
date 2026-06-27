@@ -6,6 +6,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from backend.data.market_data import get_live_market_data
+from backend.quant.risk import compute_risk_metrics
+from backend.quant.rebalancer import analyze_current_portfolio
 
 def run_debug():
     print("Fetching market data...")

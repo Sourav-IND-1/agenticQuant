@@ -15,7 +15,7 @@ def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2:
     if arg2 is None:
         if isinstance(arg1, dict):
             market_data = arg1
-            tickers = [t for t in market_data.keys() if t != 'SPY']
+            tickers = [t for t in market_data.keys() if t != '^NSEI']
         elif isinstance(arg1, list):
             tickers = arg1
     else:
@@ -27,7 +27,7 @@ def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2:
             tickers = arg2
 
     if not tickers:
-        tickers = [t for t in market_data.keys() if t != 'SPY']
+        tickers = [t for t in market_data.keys() if t != '^NSEI']
 
     returns_dict = {}
     for ticker, df in market_data.items():
@@ -110,10 +110,6 @@ def compute_quant_context(arg1: Union[List[str], Dict[str, pd.DataFrame]], arg2:
             "momentum_60d": round(mom_60d, 4),
             "expected_return_capm": round(expected_return_capm, 4),
             "correlations": correlations,
-            # Backward compatibility aliases for existing caller modules
-            "annualized_volatility": round(sigma, 4),
-            "sharpe_ratio": round(sharpe, 4),
-            "capm_expected_return": round(expected_return_capm, 4),
             "latest_price": round(float(close[-1]), 2) if len(close) > 0 else 0.0
         }
 

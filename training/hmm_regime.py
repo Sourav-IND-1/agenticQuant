@@ -8,24 +8,24 @@ import pandas as pd
 import time
 
 def main():
-    print("Fetching SPY data for regime detection...")
-    spy = None
+    print("Fetching ^NSEI (Nifty 50) data for regime detection...")
+    nsei = None
     for attempt in range(5):
-        spy = yf.download("SPY", start="2008-01-01", end="2024-12-31")
-        if not spy.empty:
+        nsei = yf.download("^NSEI", start="2008-01-01", end="2024-12-31")
+        if not nsei.empty:
             break
-        print("yfinance failed to download SPY. Retrying in 2 seconds...")
+        print("yfinance failed to download ^NSEI. Retrying in 2 seconds...")
         time.sleep(2)
         
-    if spy is None or spy.empty:
-        print("Failed to download SPY data after 5 attempts.")
+    if nsei is None or nsei.empty:
+        print("Failed to download ^NSEI data after 5 attempts.")
         return
         
-    if isinstance(spy.columns, pd.MultiIndex):
-        spy.columns = spy.columns.droplevel(1)
+    if isinstance(nsei.columns, pd.MultiIndex):
+        nsei.columns = nsei.columns.droplevel(1)
         
     # Calculate features
-    returns = spy['Close'].pct_change().dropna()
+    returns = nsei['Close'].pct_change().dropna()
     volatility = returns.rolling(20).std().dropna()
 
     # Align data lengths

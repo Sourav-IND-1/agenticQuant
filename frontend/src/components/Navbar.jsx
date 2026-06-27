@@ -44,7 +44,7 @@ const Navbar = ({ regime, onOpenHistory }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#132a24', borderRadius: '4px', border: '1px solid #1f4e3d' }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
-          <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 500 }}>NYSE Live Feed Connected</span>
+          <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 500 }}>NSE Live Feed Connected</span>
         </div>
 
         <button 

@@ -41,7 +41,7 @@ GROQ_MODEL_CHAIN = [
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "capital": {"type": "number", "description": "Investment capital in USD. Can be 0 if current_holdings provided."},
+        "capital": {"type": "number", "description": "Investment capital in INR (Indian Rupees). Can be 0 if current_holdings provided."},
         "horizon_days": {"type": "integer", "description": "Investment horizon in days"},
         "risk_tolerance": {
             "type": "string",
@@ -60,7 +60,7 @@ RESPONSE_SCHEMA = {
                 "properties": {
                     "ticker": {"type": "string", "description": "Stock ticker symbol (e.g., AAPL, TCS.NS, RELIANCE.NS)"},
                     "shares": {"type": "number", "description": "Number of shares owned (if specified)"},
-                    "value": {"type": "number", "description": "Total dollar value of the holding (if specified, e.g. 15000 for 15k)"},
+                    "value": {"type": "number", "description": "Total INR value of the holding (if specified, e.g. 15000 for 15k)"},
                     "avg_cost": {"type": "number", "description": "Average cost basis if known, else 0"}
                 },
                 "required": ["ticker"]
@@ -111,10 +111,10 @@ def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
 {ctx_block}
 
 === INSTRUCTIONS ===
-1. Extract capital (USD), horizon (days), and risk tolerance from the user's text.
-2. Extract the user's current holdings. If they mention conversational names like "infy", "reliance", "tcs", map them to the official tickers in this universe: {config.TICKERS}.
-   - If they say a dollar amount (e.g. "15k in TCS"), extract it as 'value': 15000.
-   - If they say shares (e.g. "100 shares of Apple"), extract it as 'shares': 100.
+1. Extract capital (INR ₹), horizon (days), and risk tolerance from the user's text. Treat all monetary values as Indian Rupees. If user says "lakh" or "L", multiply by 100000. If user says "crore" or "Cr", multiply by 10000000.
+2. Extract the user's current holdings. If they mention conversational names like "infy", "infosys", "reliance", "tcs", "tata motors", "hdfc", "sbi", "axis", "icici", "bajaj", "maruti", "titan", "asian paints", map them to the official NSE tickers in this universe: {config.TICKERS}.
+   - If they say a rupee amount (e.g. "15k in TCS"), extract it as 'value': 15000.
+   - If they say shares (e.g. "100 shares of Reliance"), extract it as 'shares': 100.
    - Default avg_cost to 0 if not provided.
 3. Extract max_sell_pct if specified (e.g., "don't sell more than 30%" -> 0.30). Default to 1.0 if not specified.
 4. For each ticker the user mentions with a view (universe: {config.TICKERS}), generate an "expected_return" view.
@@ -327,13 +327,32 @@ def extract_investment_brief(user_input: str, quant_context: Dict[str, Any],
             print(f"[llm] Unexpected error ({e}) — using heuristic fallback.")
             result = _heuristic_fallback(user_input, quant_context)
 
-    # Validate required fields exist
-    result.setdefault("capital", 0.0)
-    result.setdefault("horizon_days", 180)
+    # Validate required fields exist and coerce types
+    try:
+        result["capital"] = float(result.get("capital", 0.0))
+    except (ValueError, TypeError):
+        result["capital"] = 0.0
+        
+    try:
+        result["horizon_days"] = int(result.get("horizon_days", 180))
+    except (ValueError, TypeError):
+        result["horizon_days"] = 180
+        
     result.setdefault("risk_tolerance", "moderate")
-    result.setdefault("max_sell_pct", 1.0)
+    
+    try:
+        result["max_sell_pct"] = float(result.get("max_sell_pct", 1.0))
+    except (ValueError, TypeError):
+        result["max_sell_pct"] = 1.0
+        
     result.setdefault("current_holdings", [])
     result.setdefault("views", [])
+    
+    for view in result.get("views", []):
+        try:
+            view["expected_return"] = float(view.get("expected_return", 0.0))
+        except (ValueError, TypeError):
+            view["expected_return"] = 0.0
     
     # Process current holdings (Convert Gemini Array to expected Backend Dictionary format)
     # and handle value vs shares logic.
@@ -345,8 +364,15 @@ def extract_investment_brief(user_input: str, quant_context: Dict[str, Any],
             ticker = item.get("ticker")
             if not ticker: continue
                 
-            shares = item.get("shares")
-            value = item.get("value")
+            try:
+                shares = float(item["shares"]) if item.get("shares") is not None else None
+            except (ValueError, TypeError):
+                shares = None
+                
+            try:
+                value = float(item["value"]) if item.get("value") is not None else None
+            except (ValueError, TypeError):
+                value = None
             
             # Use real-time price if available, else a fallback guess
             current_price = 100.0
@@ -355,13 +381,18 @@ def extract_investment_brief(user_input: str, quant_context: Dict[str, Any],
                  
             # Convert value to shares if shares aren't explicitly provided
             if shares is None and value is not None:
-                 shares = value / current_price
+                 shares = float(value / current_price)
             elif shares is None:
                  shares = 0.0
                  
+            try:
+                avg_cost = float(item.get("avg_cost", 0.0))
+            except (ValueError, TypeError):
+                avg_cost = 0.0
+                 
             processed_holdings[ticker] = {
                 "shares": shares,
-                "avg_cost": item.get("avg_cost", 0.0)
+                "avg_cost": avg_cost
             }
             
         result["current_holdings"] = processed_holdings
