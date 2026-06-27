@@ -30,16 +30,14 @@ import config
 # Suppress InsecureRequestWarning when using verify=False behind corporate proxies
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Gemini REST endpoint — uses direct HTTP to bypass gRPC SSL certificate interception
-# Model fallback chain: try gemini-1.5-pro first (per spec), then available alternatives
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
-GEMINI_MODEL_CHAIN = [
-    "gemini-1.5-pro",       # Spec-requested model
-    "gemini-2.5-flash",     # Best available alternative
-    "gemini-2.0-flash",     # Widely available fallback
+# Groq API endpoint (OpenAI compatible)
+GROQ_API_BASE = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL_CHAIN = [
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant"
 ]
 
-# JSON Schema enforced via Gemini response_schema (structured output)
+# JSON Schema definition (injected into prompt for Groq JSON mode)
 RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
@@ -55,15 +53,17 @@ RESPONSE_SCHEMA = {
             "description": "Maximum percentage of portfolio to sell as decimal (e.g. 0.30 for 30%)"
         },
         "current_holdings": {
-            "type": "object",
-            "description": "Mapping of ticker symbol to its holdings data",
-            "additionalProperties": {
+            "type": "array",
+            "description": "List of current holdings with either exact shares or total value.",
+            "items": {
                 "type": "object",
                 "properties": {
-                    "shares": {"type": "number"},
-                    "avg_cost": {"type": "number"}
+                    "ticker": {"type": "string", "description": "Stock ticker symbol (e.g., AAPL, TCS.NS, RELIANCE.NS)"},
+                    "shares": {"type": "number", "description": "Number of shares owned (if specified)"},
+                    "value": {"type": "number", "description": "Total dollar value of the holding (if specified, e.g. 15000 for 15k)"},
+                    "avg_cost": {"type": "number", "description": "Average cost basis if known, else 0"}
                 },
-                "required": ["shares", "avg_cost"]
+                "required": ["ticker"]
             }
         },
         "views": {
@@ -88,9 +88,8 @@ RESPONSE_SCHEMA = {
 
 
 def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
-    """Construct the Gemini prompt injecting quant_context as formatted JSON context."""
+    """Construct the prompt injecting quant_context and JSON schema."""
 
-    # Format quant context into a readable block for the LLM
     ctx_lines = []
     for ticker, metrics in quant_context.items():
         if not isinstance(metrics, dict):
@@ -100,10 +99,11 @@ def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
             f"beta={metrics.get('beta', 'N/A')}, "
             f"sharpe={metrics.get('sharpe', 'N/A')}, "
             f"momentum_20d={metrics.get('momentum_20d', 'N/A')}, "
-            f"momentum_60d={metrics.get('momentum_60d', 'N/A')}, "
             f"capm_expected_return={metrics.get('expected_return_capm', 'N/A')}"
         )
     ctx_block = "\n".join(ctx_lines) if ctx_lines else "  No quantitative context available."
+
+    schema_str = json.dumps(RESPONSE_SCHEMA, indent=2)
 
     return f"""You are a quantitative finance AI. Extract structured investment parameters from the user's natural language goal.
 
@@ -112,7 +112,10 @@ def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
 
 === INSTRUCTIONS ===
 1. Extract capital (USD), horizon (days), and risk tolerance from the user's text.
-2. Extract the user's current holdings. For each holding, extract the ticker, shares, and avg_cost. If they hold a stock but no cost is given, use 0 for avg_cost.
+2. Extract the user's current holdings. If they mention conversational names like "infy", "reliance", "tcs", map them to the official tickers in this universe: {config.TICKERS}.
+   - If they say a dollar amount (e.g. "15k in TCS"), extract it as 'value': 15000.
+   - If they say shares (e.g. "100 shares of Apple"), extract it as 'shares': 100.
+   - Default avg_cost to 0 if not provided.
 3. Extract max_sell_pct if specified (e.g., "don't sell more than 30%" -> 0.30). Default to 1.0 if not specified.
 4. For each ticker the user mentions with a view (universe: {config.TICKERS}), generate an "expected_return" view.
 5. GROUND your expected_return views in the provided volatility and beta numbers:
@@ -124,64 +127,57 @@ def _build_prompt(user_input: str, quant_context: Dict[str, Any]) -> str:
 7. If the user doesn't specify horizon, default to 180 days.
 8. If the user doesn't specify risk, default to "moderate".
 
+=== REQUIRED JSON SCHEMA ===
+You MUST return ONLY a JSON object that strictly conforms to the following schema:
+{schema_str}
+
 === USER INPUT ===
 "{user_input}"
+"""
 
-Return a JSON object with: capital (float), horizon_days (int), risk_tolerance (string), max_sell_pct (float), current_holdings (object mapping ticker to shares and avg_cost), and views (array of objects with ticker, type="absolute", expected_return as float)."""
 
+def _call_llm_api(prompt: str, timeout: float = 15.0) -> Dict[str, Any]:
+    """Call Groq API using JSON mode."""
 
-def _call_gemini_api(prompt: str, timeout: float = 15.0) -> Dict[str, Any]:
-    """Call Gemini via REST with response_schema. Tries each model in GEMINI_MODEL_CHAIN."""
-
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 1024,
-            "responseMimeType": "application/json",
-            "responseSchema": RESPONSE_SCHEMA
-        }
+    headers = {
+        "Authorization": f"Bearer {config.GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
 
     last_error = None
-    for model_name in GEMINI_MODEL_CHAIN:
-        url = f"{GEMINI_API_BASE}/{model_name}:generateContent?key={config.GEMINI_API_KEY}"
+    for model_name in GROQ_MODEL_CHAIN:
+        payload = {
+            "model": model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2,
+            "max_tokens": 1024,
+            "response_format": {"type": "json_object"}
+        }
+
         try:
-            resp = requests.post(url, json=payload, timeout=timeout, verify=False)
-            if resp.status_code == 404:
-                # Model not available on this key, try next
-                last_error = f"{model_name} returned 404"
-                continue
+            resp = requests.post(GROQ_API_BASE, headers=headers, json=payload, timeout=timeout)
             resp.raise_for_status()
 
             data = resp.json()
-            raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
+            raw_text = data["choices"][0]["message"]["content"]
 
-            # Parse JSON (response_schema guarantees valid JSON, but be safe)
-            text = raw_text.strip()
-            if text.startswith("```json"):
-                text = text[7:]
-            if text.startswith("```"):
-                text = text[3:]
-            if text.endswith("```"):
-                text = text[:-3]
+            print(f"[llm] Success with model: {model_name}")
+            return json.loads(raw_text.strip())
 
-            print(f"[gemini] Success with model: {model_name}")
-            return json.loads(text.strip())
-
-        except requests.exceptions.HTTPError:
-            last_error = f"{model_name} HTTP {resp.status_code}"
+        except requests.exceptions.HTTPError as e:
+            last_error = f"{model_name} HTTP {resp.status_code} - {e.response.text if hasattr(e, 'response') else ''}"
+            print(f"[llm debug] Error on {model_name}: {last_error}")
             continue
         except Exception as e:
             last_error = f"{model_name}: {e}"
+            print(f"[llm debug] Exception on {model_name}: {last_error}")
             continue
 
-    # All models in chain failed
-    raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
+    raise RuntimeError(f"All LLM models failed. Last error: {last_error}")
 
 
 # ---------------------------------------------------------------------------
-# Heuristic regex fallback
+# Heuristic fallback
 # ---------------------------------------------------------------------------
 
 def _heuristic_fallback(user_input: str, quant_context: Dict[str, Any]) -> Dict[str, Any]:
@@ -285,7 +281,7 @@ def _heuristic_fallback(user_input: str, quant_context: Dict[str, Any]) -> Dict[
         "horizon_days": horizon_days,
         "risk_tolerance": risk_tolerance,
         "max_sell_pct": max_sell_pct,
-        "current_holdings": {},
+        "current_holdings": [],
         "views": views
     }
 
@@ -307,39 +303,70 @@ def extract_investment_brief(user_input: str, quant_context: Dict[str, Any],
     """
 
     # Guard: no API key → immediate fallback
-    if not config.GEMINI_API_KEY:
-        print("[gemini] No GEMINI_API_KEY set — using heuristic fallback.")
-        return _heuristic_fallback(user_input, quant_context)
+    if not config.GROQ_API_KEY:
+        print("[llm] No GROQ_API_KEY set — using heuristic fallback.")
+        result = _heuristic_fallback(user_input, quant_context)
+    else:
+        try:
+            prompt = _build_prompt(user_input, quant_context)
+            result = _call_llm_api(prompt, timeout=15.0)
 
-    try:
-        prompt = _build_prompt(user_input, quant_context)
-        result = _call_gemini_api(prompt, timeout=15.0)
+        except requests.exceptions.Timeout:
+            print("[llm] Network timeout — using heuristic fallback.")
+            result = _heuristic_fallback(user_input, quant_context)
 
-        # Validate required fields exist
-        result.setdefault("capital", 0.0)
-        result.setdefault("horizon_days", 180)
-        result.setdefault("risk_tolerance", "moderate")
-        result.setdefault("max_sell_pct", 1.0)
-        result.setdefault("current_holdings", {})
-        result.setdefault("views", [])
+        except requests.exceptions.HTTPError as e:
+            print(f"[llm] HTTP error {e.response.status_code} — using heuristic fallback.")
+            result = _heuristic_fallback(user_input, quant_context)
 
-        return result
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
+            print(f"[llm] Response parsing failed ({e}) — using heuristic fallback.")
+            result = _heuristic_fallback(user_input, quant_context)
 
-    except requests.exceptions.Timeout:
-        print("[gemini] Network timeout — using heuristic fallback.")
-        return _heuristic_fallback(user_input, quant_context)
+        except Exception as e:
+            print(f"[llm] Unexpected error ({e}) — using heuristic fallback.")
+            result = _heuristic_fallback(user_input, quant_context)
 
-    except requests.exceptions.HTTPError as e:
-        print(f"[gemini] HTTP error {e.response.status_code} — using heuristic fallback.")
-        return _heuristic_fallback(user_input, quant_context)
+    # Validate required fields exist
+    result.setdefault("capital", 0.0)
+    result.setdefault("horizon_days", 180)
+    result.setdefault("risk_tolerance", "moderate")
+    result.setdefault("max_sell_pct", 1.0)
+    result.setdefault("current_holdings", [])
+    result.setdefault("views", [])
+    
+    # Process current holdings (Convert Gemini Array to expected Backend Dictionary format)
+    # and handle value vs shares logic.
+    raw_holdings = result.get("current_holdings", [])
+    processed_holdings = {}
+    
+    if isinstance(raw_holdings, list):
+        for item in raw_holdings:
+            ticker = item.get("ticker")
+            if not ticker: continue
+                
+            shares = item.get("shares")
+            value = item.get("value")
+            
+            # Use real-time price if available, else a fallback guess
+            current_price = 100.0
+            if ticker in quant_context and "current_price" in quant_context[ticker]:
+                 current_price = quant_context[ticker]["current_price"]
+                 
+            # Convert value to shares if shares aren't explicitly provided
+            if shares is None and value is not None:
+                 shares = value / current_price
+            elif shares is None:
+                 shares = 0.0
+                 
+            processed_holdings[ticker] = {
+                "shares": shares,
+                "avg_cost": item.get("avg_cost", 0.0)
+            }
+            
+        result["current_holdings"] = processed_holdings
 
-    except (json.JSONDecodeError, KeyError, IndexError) as e:
-        print(f"[gemini] Response parsing failed ({e}) — using heuristic fallback.")
-        return _heuristic_fallback(user_input, quant_context)
-
-    except Exception as e:
-        print(f"[gemini] Unexpected error ({e}) — using heuristic fallback.")
-        return _heuristic_fallback(user_input, quant_context)
+    return result
 
 
 # ---------------------------------------------------------------------------

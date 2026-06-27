@@ -115,7 +115,10 @@ def analyze_strategy(req: AnalyzeRequest):
         for ticker in list(current_holdings.keys()) + config.TICKERS:
             if ticker in market_data and not market_data[ticker].empty and "Close" in market_data[ticker].columns:
                 try:
-                    current_prices[ticker] = float(market_data[ticker]["Close"].iloc[-1])
+                    val = market_data[ticker]["Close"].iloc[-1]
+                    if isinstance(val, pd.Series):
+                        val = val.iloc[0]
+                    current_prices[ticker] = float(val)
                 except (TypeError, ValueError, IndexError):
                     pass
                 

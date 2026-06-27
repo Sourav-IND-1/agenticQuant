@@ -27,7 +27,10 @@ def analyze_current_portfolio(
         avg_cost = data.get("avg_cost", 0.0)
         price = current_prices.get(ticker, avg_cost)
         if price == 0 and market_data and ticker in market_data and not market_data[ticker].empty:
-            price = market_data[ticker]["Close"].iloc[-1]
+            val = market_data[ticker]["Close"].iloc[-1]
+            if isinstance(val, pd.Series):
+                val = val.iloc[0]
+            price = float(val)
             
         value = shares * price
         total_value += value
@@ -44,7 +47,16 @@ def analyze_current_portfolio(
         returns_dict = {}
         for t in current_weights.keys():
             if t in market_data and not market_data[t].empty and "Close" in market_data[t].columns:
-                returns_dict[t] = market_data[t]["Close"].pct_change().dropna()
+                close_s = market_data[t]["Close"]
+                if isinstance(close_s, pd.DataFrame):
+                    close_s = close_s.iloc[:, 0]
+                
+                rets = close_s.pct_change().dropna()
+                # Ensure it's a 1D Series to prevent pd.DataFrame() from crashing
+                if isinstance(rets, pd.DataFrame):
+                    rets = rets.iloc[:, 0]
+                returns_dict[t] = rets
+                
         if returns_dict:
             corr_matrix = pd.DataFrame(returns_dict).corr()
             tickers = list(corr_matrix.columns)
@@ -191,7 +203,10 @@ def calculate_before_after_metrics(
         avg_cost = data.get("avg_cost", 0.0)
         price = current_prices.get(ticker, avg_cost)
         if price == 0 and market_data and ticker in market_data and not market_data[ticker].empty:
-            price = market_data[ticker]["Close"].iloc[-1]
+            val = market_data[ticker]["Close"].iloc[-1]
+            if isinstance(val, pd.Series):
+                val = val.iloc[0]
+            price = float(val)
         val = shares * price
         ticker_values[ticker] = val
         total_value += val

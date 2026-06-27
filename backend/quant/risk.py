@@ -66,7 +66,14 @@ def compute_risk_metrics(
         df = market_data[ticker]
         if df.empty or "Close" not in df.columns:
             continue
-        returns_dict[ticker] = df["Close"].pct_change().dropna()
+        close_s = df["Close"]
+        if isinstance(close_s, pd.DataFrame):
+            close_s = close_s.iloc[:, 0]
+            
+        rets = close_s.pct_change().dropna()
+        if isinstance(rets, pd.DataFrame):
+            rets = rets.iloc[:, 0]
+        returns_dict[ticker] = rets
 
     if not returns_dict:
         return _empty_metrics(capital)
