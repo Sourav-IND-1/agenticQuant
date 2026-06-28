@@ -57,8 +57,8 @@ const BacktestChart = ({ backtestData = [] }) => {
             <YAxis stroke="#4b5563" tick={{ fill: '#9ca3af', fontSize: 12 }} unit="k" />
             <Tooltip content={<CustomTooltip />} />
             <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '0.85rem' }} />
-            <Area type="monotone" name="Strategy Portfolio ($)" dataKey="strategy" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorStrategy)" />
-            <Area type="monotone" name="SPY Benchmark ($)" dataKey="benchmark" stroke="#64748b" strokeWidth={1.5} strokeDasharray="4 4" fillOpacity={1} fill="url(#colorBenchmark)" />
+            <Area type="monotone" name="Strategy Portfolio (₹)" dataKey="strategy" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorStrategy)" />
+            <Area type="monotone" name="Nifty 50 Benchmark (₹)" dataKey="benchmark" stroke="#64748b" strokeWidth={1.5} strokeDasharray="4 4" fillOpacity={1} fill="url(#colorBenchmark)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>

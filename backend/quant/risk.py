@@ -170,10 +170,10 @@ def _build_equity_curve(
     market_data: Dict[str, pd.DataFrame],
     capital: float,
 ) -> List[Dict[str, Any]]:
-    """Walk-forward backtest: simulate portfolio vs SPY from BACKTEST_START.
+    """Walk-forward backtest: simulate portfolio vs Nifty 50 from BACKTEST_START.
 
     Returns:
-        [{"date": "2020-01-01", "strategy": 100000, "spy": 100000}, ...]
+        [{"date": "2020-01-01", "strategy": 100000, "benchmark": 100000}, ...]
     """
 
     # Filter portfolio returns from backtest start date
@@ -185,32 +185,32 @@ def _build_equity_curve(
     if bt_returns.empty:
         bt_returns = port_series.tail(252)  # Fallback: last year
 
-    # Build SPY returns for same date range
-    spy_df = market_data.get("SPY", pd.DataFrame())
-    if not spy_df.empty and "Close" in spy_df.columns:
-        spy_returns = spy_df["Close"].pct_change().dropna()
+    # Build Benchmark returns for same date range
+    benchmark_df = market_data.get("^NSEI", pd.DataFrame())
+    if not benchmark_df.empty and "Close" in benchmark_df.columns:
+        benchmark_returns = benchmark_df["Close"].pct_change().dropna()
         try:
-            spy_returns = spy_returns.loc[bt_returns.index[0]:]
+            benchmark_returns = benchmark_returns.loc[bt_returns.index[0]:]
         except Exception:
             pass
     else:
-        # Synthetic SPY proxy: ~10% annual return
-        spy_returns = pd.Series(
+        # Synthetic Benchmark proxy: ~10% annual return
+        benchmark_returns = pd.Series(
             np.random.normal(0.0004, 0.01, len(bt_returns)),
             index=bt_returns.index,
         )
 
     # Align dates
-    common_idx = bt_returns.index.intersection(spy_returns.index)
+    common_idx = bt_returns.index.intersection(benchmark_returns.index)
     if len(common_idx) == 0:
         common_idx = bt_returns.index
 
     bt_aligned = bt_returns.reindex(common_idx).fillna(0.0)
-    spy_aligned = spy_returns.reindex(common_idx).fillna(0.0)
+    benchmark_aligned = benchmark_returns.reindex(common_idx).fillna(0.0)
 
     # Compute cumulative equity curves
     strategy_equity = capital * (1 + bt_aligned).cumprod()
-    spy_equity = capital * (1 + spy_aligned).cumprod()
+    benchmark_equity = capital * (1 + benchmark_aligned).cumprod()
 
     # Sample to max ~500 points to keep payload lightweight for the frontend
     step = max(1, len(common_idx) // 500)
@@ -222,7 +222,7 @@ def _build_equity_curve(
         equity_curve.append({
             "date": date_str,
             "strategy": round(float(strategy_equity.iloc[i]), 2),
-            "spy": round(float(spy_equity.iloc[i]), 2),
+            "benchmark": round(float(benchmark_equity.iloc[i]), 2),
         })
 
     # Always include final data point
@@ -231,7 +231,7 @@ def _build_equity_curve(
         equity_curve.append({
             "date": dt.strftime("%Y-%m-%d") if hasattr(dt, "strftime") else str(dt),
             "strategy": round(float(strategy_equity.iloc[-1]), 2),
-            "spy": round(float(spy_equity.iloc[-1]), 2),
+            "benchmark": round(float(benchmark_equity.iloc[-1]), 2),
         })
 
     return equity_curve
