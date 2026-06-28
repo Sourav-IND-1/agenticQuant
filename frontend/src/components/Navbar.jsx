@@ -20,9 +20,9 @@ const Navbar = ({ regime, onOpenHistory }) => {
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#f9fafb', margin: 0 }}>
-              Quantitative Portfolio Analytics
-            </h1>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">
+              AgenticQuant
+            </span>
             <span style={{ fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '2px 8px', borderRadius: '4px', fontWeight: 500, border: '1px solid #334155' }}>
               Institutional v2.4
             </span>
