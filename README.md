@@ -5,8 +5,6 @@
 
 AgenticQuant bridges the gap between natural language and institutional-grade mathematics. It translates plain English investment intent into rigorously optimized, regime-aware portfolios drawn from the **Nifty 50 universe**.
 
-![AgenticQuant Cover](https://via.placeholder.com/1200x600.png?text=AgenticQuant+-+AI+Driven+Portfolio+Optimization)
-
 ---
 
 ## 🚀 The Solution: A 12-Step Autonomous Pipeline
