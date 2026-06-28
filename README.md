@@ -28,6 +28,45 @@ AgenticQuant is not a chatbot with financial opinions. It is a mathematical engi
 
 ---
 
+## 🧮 The Core Mathematics
+
+AgenticQuant is driven by institutional-grade quantitative formulas at every step of the pipeline.
+
+### 1. Capital Asset Pricing Model (CAPM)
+Used to establish the baseline market equilibrium expected returns before any AI views are injected.
+```math
+E(R_i) = R_f + \beta_i(E(R_m) - R_f)
+```
+*Where $R_f$ is the Risk-free rate (6.5% RBI repo) and $\beta_i$ is the asset's volatility relative to the Nifty 50.*
+
+### 2. Black-Litterman Posterior Expected Returns
+Blends the CAPM market equilibrium with the XGBoost ML signals and User Views to create a mathematically sound posterior return vector.
+```math
+E[R] = [(\tau \Sigma)^{-1} + P^T \Omega^{-1} P]^{-1} [(\tau \Sigma)^{-1} \Pi + P^T \Omega^{-1} Q]
+```
+*Where $\Pi$ is the CAPM prior, $P$ is the view mapping matrix, $Q$ is the view returns (XGBoost + LLM), and $\Omega$ represents the confidence (error term) of the views.*
+
+### 3. Sharpe Ratio Optimization (Efficient Frontier)
+Finds the exact portfolio weights that maximize risk-adjusted returns subject to HMM regime constraints.
+```math
+\max_w \frac{w^T E[R] - R_f}{\sqrt{w^T \Sigma w}}
+```
+*Subject to: $\sum w_i = 1$ and regime-dynamic bounds $w_{min} \le w_i \le w_{max}$ (e.g., Bear market forces extreme diversification by capping max weight).*
+
+### 4. Hidden Markov Model (Regime Detection)
+Dynamically detects the current market state using a Gaussian emission probability on the Nifty 50 variance.
+```math
+P(x_t | z_t = k) = \mathcal{N}(x_t | \mu_k, \Sigma_k)
+```
+
+### 5. XGBoost Objective Function (Log Loss)
+The gradient-boosted trees predict the 10-day directional movement by minimizing the log-loss error, regularized by $\Omega(f)$ to prevent overfitting.
+```math
+\mathcal{L} = \sum [y_i \ln(p_i) + (1-y_i) \ln(1-p_i)] + \Omega(f)
+```
+
+---
+
 ## 🛠️ Technology Stack
 
 **Frontend (UI/UX)**
