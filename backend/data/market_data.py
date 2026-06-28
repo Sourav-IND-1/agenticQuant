@@ -112,8 +112,12 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
             print(f"Cache inspection warning: {e}")
 
     # If cache is fresh and contains required universe, return immediately (sub-100ms)
-    all_symbols = list(config.TICKERS) + ["SPY"]
+    all_symbols = list(config.TICKERS) + ["^NSEI"]
     if is_cache_fresh and all(sym in cache and not cache[sym].empty for sym in all_symbols):
+        # Enforce flat columns across the entire app
+        for sym, df in cache.items():
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
         return cache
 
     # If cache missing or stale, fetch fresh from yFinance from 2008-01-01
@@ -133,6 +137,8 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
         if df.empty and symbol in cache:
             # Fallback to existing stale cache if yFinance connection fails
             df = cache[symbol]
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
             
         if df.empty:
             # Generate synthetic fallback if no cache or live connection available

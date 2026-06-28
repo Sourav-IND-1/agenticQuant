@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, AlertTriangle, Activity, DollarSign, Award } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Activity, IndianRupee, Award } from 'lucide-react';
 
 const MetricsBar = ({ metrics }) => {
   if (!metrics) return null;
@@ -25,7 +25,7 @@ const MetricsBar = ({ metrics }) => {
     {
       title: 'Sharpe Ratio',
       value: defaultMetrics.sharpeRatio.toFixed(2),
-      sub: 'Annualized (Rf = 4.0%)',
+      sub: 'Annualized (Rf = 6.5%)',
       icon: <Award size={18} color="#38bdf8" />,
       borderTop: '#0284c7',
       valueColor: '#f9fafb'
@@ -48,9 +48,9 @@ const MetricsBar = ({ metrics }) => {
     },
     {
       title: 'Deployed Capital',
-      value: defaultMetrics.capital.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }),
+      value: defaultMetrics.capital.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }),
       sub: 'Total Active Allocation',
-      icon: <DollarSign size={18} color="#60a5fa" />,
+      icon: <IndianRupee size={18} color="#60a5fa" />,
       borderTop: '#2563eb',
       valueColor: '#f9fafb'
     }

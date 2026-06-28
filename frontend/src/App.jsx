@@ -42,8 +42,8 @@ function App() {
         const newRegime = isBear ? 'Neutral' : 'Bull';
         setRegime(newRegime);
         
-        // Parse holdings from prompt (e.g. "AAPL 50 shares at $150")
-        const holdingRegex = /([A-Z]{2,5})\s+(\d+)\s*shares?\s*(?:at|@|bought at)?\s*\$?(\d+(?:\.\d+)?)/gi;
+        // Parse holdings from prompt (e.g. "TCS.NS 50 shares at ₹3500" or "RELIANCE 10 shares")
+        const holdingRegex = /([A-Z][A-Z0-9&-]+(?:\.NS)?)\s+(\d+)\s*shares?\s*(?:at|@|bought at)?\s*[₹$]?(\d+(?:\.\d+)?)/gi;
         const parsedHoldings = {};
         const currentWeightsMock = {};
         let totalValue = 0;
@@ -57,9 +57,14 @@ function App() {
         }
 
         let cap = totalValue > 0 ? totalValue : 100000;
-        const capMatch = promptText.match(/\$?(\d+)(k|thousand)?/i);
+        const capMatch = promptText.match(/[₹$]?\s*(\d+(?:\.\d+)?)\s*(lakh|L|k|thousand|crore|Cr)?/i);
         if (capMatch && totalValue === 0) {
-          cap = parseInt(capMatch[1]) * (capMatch[2] ? 1000 : 1);
+          let multiplier = 1;
+          const unit = (capMatch[2] || '').toLowerCase();
+          if (unit === 'lakh' || unit === 'l') multiplier = 100000;
+          else if (unit === 'crore' || unit === 'cr') multiplier = 10000000;
+          else if (unit === 'k' || unit === 'thousand') multiplier = 1000;
+          cap = parseFloat(capMatch[1]) * multiplier;
         }
 
         // Build current weights from parsed holdings

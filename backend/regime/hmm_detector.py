@@ -72,19 +72,18 @@ def detect_regime(market_data: Optional[Dict[str, pd.DataFrame]] = None) -> Dict
     spy_df = pd.DataFrame()
 
     # 1. Pull SPY data from provided market_data or from market_data cache
-    if market_data is not None and "SPY" in market_data:
-        spy_df = market_data["SPY"]
+    if market_data is not None and "^NSEI" in market_data:
+        spy_df = market_data["^NSEI"]
     else:
         if config.MARKET_DATA_CACHE_PATH.exists():
             try:
                 with open(config.MARKET_DATA_CACHE_PATH, "rb") as f:
                     cache = pickle.load(f)
-                    if isinstance(cache, dict) and "SPY" in cache:
-                        spy_df = cache["SPY"]
+                    if isinstance(cache, dict) and "^NSEI" in cache:
+                        spy_df = cache["^NSEI"]
             except Exception:
                 pass
 
-    # If SPY is empty or not present, construct market proxy from available tickers
     if spy_df.empty:
         if market_data:
             prices_list = [df["Close"] for df in market_data.values() if not df.empty and "Close" in df.columns]

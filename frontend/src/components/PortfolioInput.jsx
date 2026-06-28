@@ -3,16 +3,16 @@ import { Send, Terminal, RefreshCw } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
   {
-    label: "AI Tech Portfolio",
-    prompt: "I hold AAPL 50 shares at $230, TSLA 20 shares at $250. I think AI stocks will boom next year. Aggressive risk. Don't sell more than 30% of my portfolio."
+    label: "Indian IT Portfolio",
+    prompt: "I hold TCS.NS 50 shares at ₹3500, INFY.NS 20 shares at ₹1500. I think tech stocks will boom next year. Aggressive risk. Don't sell more than 30% of my portfolio."
   },
   {
-    label: "Diversified US",
-    prompt: "I hold MSFT 30 shares at $430, JPM 40 shares at $200, XOM 60 shares at $110, JNJ 25 shares at $155. I want balanced diversification. Moderate risk."
+    label: "Diversified Nifty 50",
+    prompt: "I hold RELIANCE.NS 30 shares at ₹2900, HDFCBANK.NS 40 shares at ₹1600, ITC.NS 60 shares at ₹420. I want balanced diversification. Moderate risk."
   },
   {
-    label: "Indian Market Focus",
-    prompt: "I hold RELIANCE 100 shares at 2900, TCS 50 shares at 3800, INFY 80 shares at 1500. Bullish on Indian IT sector. Conservative risk."
+    label: "Auto & FMCG Focus",
+    prompt: "I hold TATAMOTORS.NS 100 shares at ₹950, M&M.NS 50 shares at ₹2800, HINDUNILVR.NS 80 shares at ₹2300. Bullish on auto sector. Conservative risk."
   }
 ];
 
@@ -56,7 +56,7 @@ const PortfolioInput = ({ onSubmit, isLoading }) => {
               resize: 'vertical',
               boxSizing: 'border-box'
             }}
-            placeholder="Tell us what you currently hold and what you expect. Example: I hold AAPL 50 shares at $150, TSLA 20 shares at $200. I think AI stocks will boom. Moderate risk."
+            placeholder="Tell us what you currently hold and what you expect. Example: I hold TCS.NS 50 shares at ₹3500, RELIANCE.NS 20 shares at ₹2900. I think IT stocks will boom. Moderate risk."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}

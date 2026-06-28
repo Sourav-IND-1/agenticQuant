@@ -3,16 +3,16 @@ import { Send, Terminal, RefreshCw } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
   {
-    label: "Tech Growth Strategy ($50k)",
-    prompt: "Tech growth focus portfolio with $50k capital over 1 year. Bullish on NVDA and MSFT."
+    label: "IT Sector Growth (₹5L)",
+    prompt: "IT sector growth portfolio with ₹5,00,000 capital over 1 year. Bullish on TCS and Infosys."
   },
   {
-    label: "Capital Preservation ($100k)",
-    prompt: "Conservative balanced portfolio with $100k capital preservation over 6 months with low volatility."
+    label: "Capital Preservation (₹10L)",
+    prompt: "Conservative balanced portfolio with ₹10,00,000 capital preservation over 6 months with low volatility."
   },
   {
-    label: "High-Beta Equities ($25k)",
-    prompt: "Aggressive AI stocks portfolio with $25k capital targeting massive growth in NVDA and GOOGL."
+    label: "High-Beta Nifty (₹2.5L)",
+    prompt: "Aggressive Nifty 50 portfolio with ₹2,50,000 capital targeting high growth in Adani and Bajaj Finance."
   }
 ];
 
@@ -49,7 +49,7 @@ const ChatInput = ({ onSubmit, isLoading }) => {
             type="text"
             className="glass-input"
             style={{ paddingRight: '70px', fontSize: '0.92rem' }}
-            placeholder="Enter capital constraints, risk tolerance, and asset views (e.g., '$100k budget, conservative risk, bullish on NVDA')..."
+            placeholder="Enter capital, risk tolerance, and stock views (e.g., '₹5 lakh budget, moderate risk, bullish on Reliance and TCS')..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={isLoading}

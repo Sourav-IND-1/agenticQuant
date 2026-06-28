@@ -25,10 +25,16 @@ FEATURE_COLS = config.FEATURE_COLS
 def fetch_data():
     data = {}
     for ticker in TICKERS:
-        df = yf.download(ticker, start="2008-01-01", end="2024-12-31")
-        if isinstance(df.columns, pd.MultiIndex):
-            df.columns = df.columns.droplevel(1)
-        data[ticker] = df
+        try:
+            df = yf.download(ticker, start="2008-01-01", end="2024-12-31", progress=False)
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.droplevel(1)
+            if df.empty or len(df) < 100:
+                print(f"  Skipping {ticker}: insufficient data ({len(df)} rows).")
+                continue
+            data[ticker] = df
+        except Exception as e:
+            print(f"  Skipping {ticker}: download error — {e}")
     return data
 
 def add_indicators(df):
@@ -78,6 +84,8 @@ def add_indicators(df):
     df['MA50'] = df['Close'].rolling(window=50).mean()
     df['Volume_change'] = df['Volume'].pct_change()
     
+    # Sanitize: replace any inf values introduced by division with NaN
+    df = df.replace([np.inf, -np.inf], np.nan)
     return df.dropna()
 
 def triple_barrier_labels(df, upper_mult=2, lower_mult=1, horizon=10):
@@ -108,10 +116,18 @@ def triple_barrier_labels(df, upper_mult=2, lower_mult=1, horizon=10):
 def check_stationarity(X_train):
     differenced_cols = []
     for col in X_train.columns:
-        if adfuller(X_train[col].dropna())[1] > 0.05:
-            X_train[col] = X_train[col].diff()
-            differenced_cols.append(col)
-    return X_train.dropna(), differenced_cols
+        # Sanitize: replace inf with NaN then drop before ADF test
+        series = X_train[col].replace([np.inf, -np.inf], np.nan).dropna()
+        if len(series) < 20:  # need enough observations for ADF
+            continue
+        try:
+            if adfuller(series)[1] > 0.05:
+                X_train[col] = X_train[col].diff()
+                differenced_cols.append(col)
+        except Exception as e:
+            # Skip problematic columns rather than crashing the entire pipeline
+            pass
+    return X_train.replace([np.inf, -np.inf], np.nan).dropna(), differenced_cols
 
 def rolling_zscore(X_train, window=60):
     rolling_params = {}

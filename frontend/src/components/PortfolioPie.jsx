@@ -1,6 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { PieChart as PieIcon, DollarSign } from 'lucide-react';
+import { PieChart as PieIcon, IndianRupee } from 'lucide-react';
 
 const COLORS = ['#2563eb', '#38bdf8', '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#64748b'];
 
@@ -14,7 +14,7 @@ const PortfolioPie = ({ currentWeights = {}, recommendedWeights = {}, capital = 
           name: key,
           value: exactAmount,
           weightPct: (weight * 100).toFixed(1),
-          formattedAmount: exactAmount.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })
+          formattedAmount: exactAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
         };
       })
       .sort((a, b) => b.value - a.value);
@@ -24,7 +24,7 @@ const PortfolioPie = ({ currentWeights = {}, recommendedWeights = {}, capital = 
   const recommendedData = formatData(recommendedWeights);
 
   const totalAllocated = currentData.reduce((sum, item) => sum + item.value, 0) || recommendedData.reduce((sum, item) => sum + item.value, 0);
-  const totalFormatted = totalAllocated.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+  const totalFormatted = totalAllocated.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -86,7 +86,7 @@ const PortfolioPie = ({ currentWeights = {}, recommendedWeights = {}, capital = 
         <PieIcon size={18} color="#38bdf8" />
         <h3 style={{ fontSize: '1rem', margin: 0, color: '#f9fafb', fontWeight: 600 }}>Allocation Comparison</h3>
         <span style={{ marginLeft: 'auto', fontSize: '0.75rem', background: '#1e293b', color: '#93c5fd', padding: '4px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, border: '1px solid #334155' }}>
-          <DollarSign size={12} /> Total: {totalFormatted}
+          <IndianRupee size={12} /> Total: {totalFormatted}
         </span>
       </div>
 

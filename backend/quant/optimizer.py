@@ -40,9 +40,9 @@ from pypfopt import (
 # Step 2 — REGIME WEIGHT CONSTRAINTS
 # ──────────────────────────────────────────────────────────────────────────
 REGIME_BOUNDS = {
-    "Bull":    {"max_weight": 0.40, "min_weight": 0.05},
-    "Neutral": {"max_weight": 0.35, "min_weight": 0.02},
-    "Bear":    {"max_weight": 0.25, "min_weight": 0.02},
+    "Bull":    {"max_weight": 0.20, "min_weight": 0.0},
+    "Neutral": {"max_weight": 0.15, "min_weight": 0.0},
+    "Bear":    {"max_weight": 0.10, "min_weight": 0.0},
 }
 
 
@@ -50,22 +50,9 @@ def optimize_portfolio(
     validated_output: Dict[str, Any],
     quant_context: Dict[str, Any],
     ml_signals: Dict[str, Any] = None,
-    regime: str = "Neutral",
-    # Backward-compatible overload: (quant_ctx, P, Q, brief)
-    _legacy_P: np.ndarray = None,
-    _legacy_Q: np.ndarray = None,
-    _legacy_brief: Dict[str, Any] = None,
+    regime: str = "Neutral"
 ) -> Tuple[Dict[str, float], Dict[str, Any]]:
-    """Full Black-Litterman optimization pipeline.
-
-    Supports two calling conventions:
-        NEW:    optimize_portfolio(validated_output, quant_context, ml_signals, regime)
-        LEGACY: optimize_portfolio(quant_context, P, Q, brief)
-    """
-
-    # ── Detect legacy call from main.py: optimize_portfolio(quant_ctx, P, Q, brief) ──
-    if isinstance(quant_context, np.ndarray) or _legacy_P is not None:
-        return _legacy_optimize(validated_output, quant_context, ml_signals, regime)
+    """Full Black-Litterman optimization pipeline."""
 
     if ml_signals is None:
         ml_signals = {}
@@ -97,8 +84,7 @@ def optimize_portfolio(
         #   add view with expected_return = capm_return * 1.2
         if signal == 1 and ticker not in merged_views:
             ctx = quant_context.get(ticker, {})
-            capm_ret = ctx.get("expected_return_capm",
-                               ctx.get("capm_expected_return", 0.08))
+            capm_ret = ctx.get("expected_return_capm", 0.08)
             merged_views[ticker] = capm_ret * 1.2
 
         # For each ticker where ml_signal == -1:
@@ -134,8 +120,8 @@ def optimize_portfolio(
     prices_data = {}
     for ticker in tickers:
         ctx = quant_context.get(ticker, {})
-        vol = ctx.get("annual_vol", ctx.get("annualized_volatility", 0.20))
-        capm = ctx.get("expected_return_capm", ctx.get("capm_expected_return", 0.08))
+        vol = ctx.get("annual_vol", 0.20)
+        capm = ctx.get("expected_return_capm", 0.08)
         daily_ret = capm / 252
         daily_vol = vol / np.sqrt(252)
         returns = np.random.normal(daily_ret, daily_vol, n_days)
@@ -155,8 +141,7 @@ def optimize_portfolio(
     market_prior = {}
     for ticker in tickers:
         ctx = quant_context.get(ticker, {})
-        market_prior[ticker] = ctx.get("expected_return_capm",
-                                       ctx.get("capm_expected_return", 0.08))
+        market_prior[ticker] = ctx.get("expected_return_capm", 0.08)
 
     # Build absolute_views dict for BlackLittermanModel
     absolute_views = {}
@@ -218,40 +203,6 @@ def optimize_portfolio(
 
     return weights, metrics
 
-
-# ──────────────────────────────────────────────────────────────────────────
-# Legacy wrapper for backward-compatible calls from main.py
-# ──────────────────────────────────────────────────────────────────────────
-
-def _legacy_optimize(quant_ctx, P_or_arr, Q_or_arr, brief_or_regime):
-    """Handle legacy call signature: optimize_portfolio(quant_ctx, P, Q, brief)."""
-    P = P_or_arr if isinstance(P_or_arr, np.ndarray) else np.array([])
-    Q = Q_or_arr if isinstance(Q_or_arr, np.ndarray) else np.array([])
-    brief = brief_or_regime if isinstance(brief_or_regime, dict) else {}
-
-    tickers = config.TICKERS
-    N = len(tickers)
-
-    # Reconstruct validated_output from legacy args
-    validated_views = []
-    if P is not None and Q is not None and len(Q) > 0:
-        for k in range(len(Q)):
-            idx = int(np.argmax(P[k]))
-            if idx < N:
-                validated_views.append({
-                    "ticker": tickers[idx],
-                    "type": "absolute",
-                    "expected_return": float(Q[k]),
-                })
-
-    validated_output = {
-        "validated_views": validated_views,
-        "capital": brief.get("capital", 50000.0),
-        "horizon_days": brief.get("horizon_days", 180),
-        "risk_tolerance": brief.get("risk_tolerance", "moderate"),
-    }
-
-    return optimize_portfolio(validated_output, quant_ctx, ml_signals={}, regime="Neutral")
 
 
 # ──────────────────────────────────────────────────────────────────────────

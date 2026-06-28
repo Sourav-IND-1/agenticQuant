@@ -83,9 +83,8 @@ def validate_full(gemini_output: Dict[str, Any],
         raw_return = float(v.get("expected_return", 0.08))
         ctx = quant_context.get(ticker, {})
 
-        # Resolve annual_vol (support both naming conventions)
-        annual_vol = ctx.get("annual_vol",
-                             ctx.get("annualized_volatility", 0.25))
+        # Resolve annual_vol
+        annual_vol = ctx.get("annual_vol", 0.25)
 
         # ── Step 1: CAP VIEWS AT 2× ANNUALIZED VOLATILITY ──────────────
         cap = 2.0 * annual_vol
