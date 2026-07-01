@@ -228,6 +228,16 @@ def get_history(limit: int = 5):
     })
 
 
+from fastapi.staticfiles import StaticFiles
+
+# Mount static files for the React frontend
+frontend_dist = PROJECT_ROOT / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+else:
+    print(f"Frontend dist directory not found at {frontend_dist}")
+
+
 if __name__ == "__main__":
     print(f"Starting Quant Trading Intelligence Platform API on port {config.PORT}...")
     uvicorn.run("main:app", host="0.0.0.0", port=config.PORT, reload=True)

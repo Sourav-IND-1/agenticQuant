@@ -4,9 +4,24 @@ import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
 import sys
+import ssl
+import requests
+import urllib3
+
+try:
+    ssl._create_default_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+YF_SESSION = requests.Session()
+YF_SESSION.verify = False
+YF_SESSION.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'})
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import config
+
 
 try:
     import yfinance as yf
@@ -128,7 +143,7 @@ def get_live_market_data() -> dict[str, pd.DataFrame]:
         df = pd.DataFrame()
         if yf is not None:
             try:
-                df = yf.download(symbol, start="2008-01-01", end=today_str, progress=False)
+                df = yf.download(symbol, start="2008-01-01", end=today_str, progress=False, session=YF_SESSION)
                 if isinstance(df.columns, pd.MultiIndex):
                     df.columns = df.columns.get_level_values(0)
             except Exception as e:
